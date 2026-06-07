@@ -79,10 +79,12 @@ def _embed_local(texts: list[str], batch_size: int = 64) -> list[list[float]]:
     Downloads model on first call (~1.3 GB), cached in ~/.cache/huggingface/.
     BGE models work best with the instruction prefix for retrieval tasks.
     """
+    import torch
     from sentence_transformers import SentenceTransformer
 
-    logger.info(f"Loading local embedding model: {settings.embedding_model}")
-    model = SentenceTransformer(settings.embedding_model)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info(f"Loading local embedding model: {settings.embedding_model} on {device}")
+    model = SentenceTransformer(settings.embedding_model, device=device)
 
     all_embeddings: list[list[float]] = []
     total_batches = (len(texts) + batch_size - 1) // batch_size

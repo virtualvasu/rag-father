@@ -79,13 +79,16 @@ def rerank(query: str, candidates: list[dict], top_k: int = 5) -> list[dict]:
     The cross-encoder reads (query, chunk_text) pairs together and produces
     a precise relevance score — much more accurate than vector similarity alone.
     """
+    import torch
     from sentence_transformers import CrossEncoder
 
     if not candidates:
         return []
 
     logger.info(f"Reranking {len(candidates)} candidates with cross-encoder")
-    model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info(f"Loading CrossEncoder on {device}")
+    model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device=device)
 
     # Use contextualized_text if available, else raw text
     pairs = [

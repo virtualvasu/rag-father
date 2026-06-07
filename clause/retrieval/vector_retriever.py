@@ -14,10 +14,12 @@ _model: SentenceTransformer | None = None
 
 
 def _get_model() -> SentenceTransformer:
+    import torch
     global _model
     if _model is None:
-        logger.info(f"Loading embedding model: {settings.embedding_model}")
-        _model = SentenceTransformer(settings.embedding_model)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(f"Loading local embedding model: {settings.embedding_model} on {device}")
+        _model = SentenceTransformer(settings.embedding_model, device=device)
     return _model
 
 
