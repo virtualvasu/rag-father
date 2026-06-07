@@ -23,6 +23,9 @@ router = APIRouter()
 class PipelineConfig(BaseModel):
     skip_enrichment: bool = False
     use_knowledge_graph: bool = True
+    use_cross_encoder_reranker: bool = True
+    graph_search_hops: int = 1
+    wipe_data_on_pipeline_run: bool = True
     enrichment_provider: str = "ollama"
     generation_provider: str = "ollama"
     embedding_provider: str = "local"
@@ -71,6 +74,10 @@ async def run_full_pipeline(config: PipelineConfig):
     
     # Override global settings for this run and subsequent queries
     settings.use_knowledge_graph = config.use_knowledge_graph
+    settings.use_cross_encoder_reranker = config.use_cross_encoder_reranker
+    settings.graph_search_hops = config.graph_search_hops
+    settings.wipe_data_on_pipeline_run = config.wipe_data_on_pipeline_run
+    
     settings.enrichment_provider = config.enrichment_provider
     settings.generation_provider = config.generation_provider
     settings.embedding_provider = config.embedding_provider

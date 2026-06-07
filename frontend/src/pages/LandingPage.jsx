@@ -112,6 +112,10 @@ export default function LandingPage({ toggleTheme, isDark }) {
               Admin
               <span className="absolute -bottom-2 left-0 w-full h-[1px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
             </Link>
+            <Link to="/evaluate" className="font-mono text-label-md uppercase tracking-[0.2em] text-secondary hover:text-primary transition-colors duration-200 cursor-pointer relative group">
+              Eval
+              <span className="absolute -bottom-2 left-0 w-full h-[1px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+            </Link>
           </nav>
           
           {/* Actions */}

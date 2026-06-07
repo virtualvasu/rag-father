@@ -68,6 +68,9 @@ class Settings(BaseSettings):
 
     # === Pipeline & Retrieval Flags ===
     use_knowledge_graph: bool = True
+    use_cross_encoder_reranker: bool = True
+    graph_search_hops: int = 1
+    wipe_data_on_pipeline_run: bool = True
 
     # === Observability (Optional) ===
     langsmith_project: Optional[str] = None

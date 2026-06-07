@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import LandingPage from './pages/LandingPage';
 import ChatInterface from './pages/ChatInterface';
 import AdminInterface from './pages/AdminInterface';
+import EvaluationInterface from './pages/EvaluationInterface';
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<LandingPage toggleTheme={toggleTheme} isDark={isDark} />} />
         <Route path="/chat" element={<ChatInterface toggleTheme={toggleTheme} isDark={isDark} />} />
         <Route path="/admin" element={<AdminInterface toggleTheme={toggleTheme} isDark={isDark} />} />
+        <Route path="/evaluate" element={<EvaluationInterface toggleTheme={toggleTheme} isDark={isDark} />} />
       </Routes>
     </Router>
   );

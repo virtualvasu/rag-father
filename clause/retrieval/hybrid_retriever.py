@@ -109,7 +109,7 @@ def hybrid_retrieve(
     top_k_rerank: int | None = None,
     filter_act: str | None = None,
     use_graph: bool | None = None,
-    use_reranker: bool = True,
+    use_reranker: bool | None = None,
 ) -> dict:
     """
     Full hybrid retrieval pipeline.
@@ -133,6 +133,7 @@ def hybrid_retrieve(
     top_k_retrieval = top_k_retrieval or settings.top_k_retrieval
     top_k_rerank    = top_k_rerank    or settings.top_k_rerank
     use_graph = use_graph if use_graph is not None else settings.use_knowledge_graph
+    use_reranker = use_reranker if use_reranker is not None else settings.use_cross_encoder_reranker
 
     logger.info(f"Hybrid retrieve | query='{query[:80]}' | act_filter={filter_act}")
 
@@ -154,7 +155,7 @@ def hybrid_retrieve(
     graph_hits: list[dict] = []
     if use_graph:
         seed_ids = [c["chunk_id"] for c in fused[:10]]  # expand top-10 seeds
-        graph_hits = expand_with_graph(seed_ids, hops=1)
+        graph_hits = expand_with_graph(seed_ids, hops=settings.graph_search_hops)
 
         # Add graph hits to fused list (they get lower implicit rank via RRF)
         if graph_hits:

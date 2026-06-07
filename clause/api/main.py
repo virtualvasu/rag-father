@@ -37,9 +37,11 @@ def create_app() -> FastAPI:
 
     from clause.api.routes.query import router as query_router
     from clause.api.routes.ingestion import router as ingestion_router
+    from clause.api.routes.evaluation import router as evaluation_router
     
     app.include_router(query_router, tags=["Query"])
     app.include_router(ingestion_router, prefix="/api", tags=["Ingestion"])
+    app.include_router(evaluation_router, prefix="/api")
 
     @app.get("/", include_in_schema=False)
     async def root():

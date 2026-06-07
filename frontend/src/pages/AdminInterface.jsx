@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const AdminInterface = ({ isDark }) => {
+const AdminInterface = ({ toggleTheme, isDark }) => {
   const [files, setFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -10,6 +10,9 @@ const AdminInterface = ({ isDark }) => {
   const [pipelineConfig, setPipelineConfig] = useState({
     skip_enrichment: false,
     use_knowledge_graph: true,
+    use_cross_encoder_reranker: true,
+    wipe_data_on_pipeline_run: true,
+    graph_search_hops: 1,
     enrichment_provider: 'ollama',
     generation_provider: 'ollama',
     embedding_provider: 'local',
@@ -151,9 +154,18 @@ const AdminInterface = ({ isDark }) => {
   return (
     <div className={`min-h-screen ${isDark ? 'dark bg-background text-on-surface' : 'bg-background text-on-surface'}`}>
       <div className="max-w-4xl mx-auto p-8">
-        <header className="mb-12">
-          <h1 className="text-headline-xl font-headline-xl text-primary mb-2">System Admin</h1>
-          <p className="text-body-lg text-on-surface-variant font-mono">DOCUMENT INGESTION & PIPELINE CONTROL</p>
+        <header className="mb-12 flex justify-between items-start">
+          <div>
+            <h1 className="text-headline-xl font-headline-xl text-primary mb-2">System Admin</h1>
+            <p className="text-body-lg text-on-surface-variant font-mono">DOCUMENT INGESTION & PIPELINE CONTROL</p>
+          </div>
+          <button onClick={toggleTheme} className="p-2 bg-surface border border-outline-variant hover:border-primary text-on-surface transition-colors cursor-pointer">
+            {isDark ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            )}
+          </button>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -286,12 +298,20 @@ const AdminInterface = ({ isDark }) => {
               <div className="space-y-4">
                 <h3 className="font-mono text-sm text-primary uppercase">Advanced Tuning</h3>
                 <div className="flex items-center gap-2">
+                  <input type="checkbox" id="wipe_data_on_pipeline_run" name="wipe_data_on_pipeline_run" checked={pipelineConfig.wipe_data_on_pipeline_run} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
+                  <label htmlFor="wipe_data_on_pipeline_run" className="text-sm font-mono text-on-surface cursor-pointer">Wipe Data on Run (Uncheck for Append Mode)</label>
+                </div>
+                <div className="flex items-center gap-2">
                   <input type="checkbox" id="skip_enrichment" name="skip_enrichment" checked={pipelineConfig.skip_enrichment} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
                   <label htmlFor="skip_enrichment" className="text-sm font-mono text-on-surface cursor-pointer">Skip Enrichment (Faster pipeline, less contextual metadata)</label>
                 </div>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2">
                   <input type="checkbox" id="use_knowledge_graph" name="use_knowledge_graph" checked={pipelineConfig.use_knowledge_graph} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
                   <label htmlFor="use_knowledge_graph" className="text-sm font-mono text-on-surface cursor-pointer">Use Knowledge Graph (Neo4j extraction & multi-hop retrieval)</label>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <input type="checkbox" id="use_cross_encoder_reranker" name="use_cross_encoder_reranker" checked={pipelineConfig.use_cross_encoder_reranker} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
+                  <label htmlFor="use_cross_encoder_reranker" className="text-sm font-mono text-on-surface cursor-pointer">Use Cross-Encoder Reranker (Slower but more precise)</label>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -309,6 +329,10 @@ const AdminInterface = ({ isDark }) => {
                   <div>
                     <label className="block text-xs font-mono text-on-surface-variant mb-1">Top-K Rerank</label>
                     <input type="number" name="top_k_rerank" value={pipelineConfig.top_k_rerank} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Graph Search Depth (Hops)</label>
+                    <input type="number" name="graph_search_hops" min="1" max="3" value={pipelineConfig.graph_search_hops} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
                   </div>
                 </div>
               </div>

@@ -124,9 +124,19 @@ async def run_ingestion_pipeline(
     chunks_file = output_path / "chunks" / "raw_chunks.json"
     chunks_file.parent.mkdir(parents=True, exist_ok=True)
     chunks_json = [chunk.dict() for chunk in chunks]
+    
+    final_raw_chunks = []
+    if not settings.wipe_data_on_pipeline_run and chunks_file.exists():
+        try:
+            with open(chunks_file, "r") as f:
+                final_raw_chunks = json.load(f)
+        except Exception as e:
+            logger.warning(f"Could not load old raw_chunks.json: {e}")
+            
+    final_raw_chunks.extend(chunks_json)
     with open(chunks_file, "w") as f:
-        json.dump(chunks_json, f, indent=2, default=str)
-    logger.info(f"Saved {len(chunks)} raw chunks to {chunks_file}")
+        json.dump(final_raw_chunks, f, indent=2, default=str)
+    logger.info(f"Saved {len(final_raw_chunks)} raw chunks to {chunks_file} (New: {len(chunks_json)})")
 
     # Step 3: Enrich chunks with context (optional)
     if not skip_enrichment:
@@ -146,9 +156,19 @@ async def run_ingestion_pipeline(
         enriched_file = output_path / "chunks" / "enriched_chunks.json"
         enriched_file.parent.mkdir(parents=True, exist_ok=True)
         enriched_json = [chunk.dict() for chunk in chunks]
+        
+        final_enriched_chunks = []
+        if not settings.wipe_data_on_pipeline_run and enriched_file.exists():
+            try:
+                with open(enriched_file, "r") as f:
+                    final_enriched_chunks = json.load(f)
+            except Exception as e:
+                logger.warning(f"Could not load old enriched_chunks.json: {e}")
+                
+        final_enriched_chunks.extend(enriched_json)
         with open(enriched_file, "w") as f:
-            json.dump(enriched_json, f, indent=2, default=str)
-        logger.info(f"Saved {len(chunks)} enriched chunks to {enriched_file}")
+            json.dump(final_enriched_chunks, f, indent=2, default=str)
+        logger.info(f"Saved {len(final_enriched_chunks)} enriched chunks to {enriched_file} (New: {len(enriched_json)})")
     else:
         logger.info("[Step 3] Skipping enrichment (test mode)")
 
@@ -165,20 +185,33 @@ async def run_ingestion_pipeline(
         # Step 4: Embedding & Vector Indexing (Qdrant)
         if status_callback: status_callback("[Step 4/6] Creating embeddings and indexing into Vector DB (Qdrant)...")
         logger.info("\n[Step 4] Embedding & indexing into Qdrant...")
-        points_indexed = await asyncio.to_thread(index_chunks_to_qdrant, chunks_json)
+        points_indexed = await asyncio.to_thread(
+            index_chunks_to_qdrant, chunks_json, recreate=settings.wipe_data_on_pipeline_run
+        )
 
         # Step 5: BM25 Sparse Indexing
         if status_callback: status_callback("[Step 5/6] Building sparse keyword index (BM25)...")
         logger.info("\n[Step 5] Building BM25 sparse index...")
         bm25_path = str(output_path / "bm25_index.pkl")
-        await asyncio.to_thread(build_bm25_index, chunks_json, index_path=bm25_path)
+        
+        bm25_chunks_to_index = chunks_json.copy()
+        if not settings.wipe_data_on_pipeline_run and Path(bm25_path).exists():
+            from clause.indexing.bm25_indexer import load_bm25_index
+            try:
+                _, old_chunks = load_bm25_index(bm25_path)
+                bm25_chunks_to_index.extend(old_chunks)
+                logger.info(f"Loaded {len(old_chunks)} existing chunks for BM25 append.")
+            except Exception as e:
+                logger.warning(f"Could not load old BM25 chunks: {e}")
+                
+        await asyncio.to_thread(build_bm25_index, bm25_chunks_to_index, index_path=bm25_path)
 
         # Step 6: Knowledge Graph Construction (Neo4j)
         if settings.use_knowledge_graph:
             if status_callback: status_callback("[Step 6/6] Constructing Knowledge Graph relationships (Neo4j)...")
             logger.info("\n[Step 6] Building knowledge graph in Neo4j...")
             nodes_created, edges_created = await asyncio.to_thread(
-                build_knowledge_graph, chunks_json, clear_existing=True
+                build_knowledge_graph, chunks_json, clear_existing=settings.wipe_data_on_pipeline_run
             )
         else:
             if status_callback: status_callback("[Step 6/6] Knowledge Graph extraction SKIPPED (Vector-Only mode)...")
