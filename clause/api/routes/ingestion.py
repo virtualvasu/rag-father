@@ -178,11 +178,41 @@ async def reset_pipeline_data():
         logger.error(f"Failed to reset data directories: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to reset system: {str(e)}")
 
+from fastapi.responses import FileResponse
+
 @router.get("/documents")
 async def list_documents():
-    """List all currently uploaded documents."""
+    """List all currently uploaded documents with metadata."""
     raw_dir = Path("data/raw")
     files = []
     if raw_dir.exists():
-        files = [f.name for f in raw_dir.glob("*") if f.is_file()]
-    return {"files": sorted(files)}
+        for f in raw_dir.glob("*"):
+            if f.is_file():
+                stat = f.stat()
+                files.append({
+                    "name": f.name,
+                    "size_kb": round(stat.st_size / 1024, 1),
+                    "modified": stat.st_mtime
+                })
+    return {"files": sorted(files, key=lambda x: x["name"])}
+
+@router.get("/documents/{filename}")
+async def get_document(filename: str):
+    """Serve a document for previewing."""
+    file_path = Path("data/raw") / filename
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path)
+
+@router.delete("/documents/{filename}")
+async def delete_document(filename: str):
+    """Delete a specific document from the raw directory."""
+    file_path = Path("data/raw") / filename
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        file_path.unlink()
+        return {"message": f"Successfully deleted {filename}"}
+    except Exception as e:
+        logger.error(f"Failed to delete {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete {filename}")
