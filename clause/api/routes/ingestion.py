@@ -16,8 +16,28 @@ from clause.indexing.vector_indexer import index_chunks_to_qdrant
 from clause.indexing.bm25_indexer import build_bm25_index
 from clause.indexing.graph_indexer import build_knowledge_graph
 
+from typing import Optional
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+class PipelineConfig(BaseModel):
+    skip_enrichment: bool = False
+    use_knowledge_graph: bool = True
+    enrichment_provider: str = "ollama"
+    generation_provider: str = "ollama"
+    embedding_provider: str = "local"
+    anthropic_api_key: Optional[str] = ""
+    openai_api_key: Optional[str] = ""
+    custom_llm_base_url: Optional[str] = ""
+    custom_llm_api_key: Optional[str] = ""
+    custom_llm_model: Optional[str] = ""
+    ollama_model: str = "qwen2.5:7b"
+    child_chunk_size: int = 256
+    parent_chunk_size: int = 1024
+    child_chunk_overlap: int = 20
+    top_k_retrieval: int = 20
+    top_k_rerank: int = 5
+    max_agent_iterations: int = 3
 
 # Global state for simple job tracking (in a real app, use redis/db)
 pipeline_job = {
@@ -45,8 +65,34 @@ async def upload_files(files: list[UploadFile] = File(...)):
         
     return {"message": f"Successfully uploaded {len(saved_files)} files.", "files": saved_files}
 
-async def run_full_pipeline(skip_enrichment: bool = False):
+async def run_full_pipeline(config: PipelineConfig):
     """Background task to run the ingestion and indexing pipeline."""
+    from clause.config import settings
+    
+    # Override global settings for this run and subsequent queries
+    settings.use_knowledge_graph = config.use_knowledge_graph
+    settings.enrichment_provider = config.enrichment_provider
+    settings.generation_provider = config.generation_provider
+    settings.embedding_provider = config.embedding_provider
+    if config.anthropic_api_key:
+        settings.anthropic_api_key = config.anthropic_api_key
+    if config.openai_api_key:
+        settings.openai_api_key = config.openai_api_key
+    if config.custom_llm_base_url:
+        settings.custom_llm_base_url = config.custom_llm_base_url
+    if config.custom_llm_api_key:
+        settings.custom_llm_api_key = config.custom_llm_api_key
+    if config.custom_llm_model:
+        settings.custom_llm_model = config.custom_llm_model
+    if config.ollama_model:
+        settings.ollama_model = config.ollama_model
+    settings.child_chunk_size = config.child_chunk_size
+    settings.parent_chunk_size = config.parent_chunk_size
+    settings.child_chunk_overlap = config.child_chunk_overlap
+    settings.top_k_retrieval = config.top_k_retrieval
+    settings.top_k_rerank = config.top_k_rerank
+    settings.max_agent_iterations = config.max_agent_iterations
+
     global pipeline_job
     pipeline_job["status"] = "running"
     pipeline_job["message"] = "Starting ingestion pipeline..."
@@ -59,7 +105,7 @@ async def run_full_pipeline(skip_enrichment: bool = False):
         result = await run_ingestion_pipeline(
             source_dir="data/raw/",
             output_dir="data/processed/",
-            skip_enrichment=skip_enrichment,
+            skip_enrichment=config.skip_enrichment,
             status_callback=update_status,
         )
         
@@ -81,7 +127,7 @@ async def run_full_pipeline(skip_enrichment: bool = False):
 
 
 @router.post("/pipeline/run")
-async def start_pipeline(background_tasks: BackgroundTasks, skip_enrichment: bool = False):
+async def start_pipeline(config: PipelineConfig, background_tasks: BackgroundTasks):
     """Trigger the document ingestion and indexing pipeline to run in the background."""
     global pipeline_job
     if pipeline_job["status"] == "running":
@@ -94,7 +140,7 @@ async def start_pipeline(background_tasks: BackgroundTasks, skip_enrichment: boo
     if not (has_pdf or has_html):
         raise HTTPException(status_code=400, detail="No documents found. Please upload PDF files before starting the pipeline.")
         
-    background_tasks.add_task(run_full_pipeline, skip_enrichment)
+    background_tasks.add_task(run_full_pipeline, config)
     return {"message": "Pipeline execution started in the background."}
 
 @router.get("/pipeline/status")
@@ -124,3 +170,12 @@ async def reset_pipeline_data():
     except Exception as e:
         logger.error(f"Failed to reset data directories: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to reset system: {str(e)}")
+
+@router.get("/documents")
+async def list_documents():
+    """List all currently uploaded documents."""
+    raw_dir = Path("data/raw")
+    files = []
+    if raw_dir.exists():
+        files = [f.name for f in raw_dir.glob("*") if f.is_file()]
+    return {"files": sorted(files)}

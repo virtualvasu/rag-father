@@ -108,7 +108,7 @@ def hybrid_retrieve(
     top_k_retrieval: int | None = None,
     top_k_rerank: int | None = None,
     filter_act: str | None = None,
-    use_graph: bool = True,
+    use_graph: bool | None = None,
     use_reranker: bool = True,
 ) -> dict:
     """
@@ -132,6 +132,7 @@ def hybrid_retrieve(
     """
     top_k_retrieval = top_k_retrieval or settings.top_k_retrieval
     top_k_rerank    = top_k_rerank    or settings.top_k_rerank
+    use_graph = use_graph if use_graph is not None else settings.use_knowledge_graph
 
     logger.info(f"Hybrid retrieve | query='{query[:80]}' | act_filter={filter_act}")
 

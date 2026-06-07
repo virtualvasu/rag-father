@@ -1,0 +1,182 @@
+[
+  {
+    "chunk_id": "STARTU_S1",
+    "type": "parent",
+    "parent_id": null,
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "1",
+    "section_title": "",
+    "text": "[Section 80-IAC]:- Tax incentives for new start-ups\n\n\n\nObjective:",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 80"
+    ],
+    "tokens": 10,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S1_1",
+    "type": "child",
+    "parent_id": "STARTU_S1",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "1",
+    "section_title": "",
+    "text": "[Section 80-IAC]:- Tax incentives for new start-ups\n\n\n\nObjective:",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 80"
+    ],
+    "tokens": 10,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80",
+    "type": "parent",
+    "parent_id": null,
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "Section 80-IAC provides an incentive to start-ups in order to aid their growth in the early phase of their business.\n\n\n(ii)\n\n\n\nQuantum of deduction:\n\nAccordingly, a deduction of an eligible business is allowed for any years beginning from the year in which the eligible start up is incorporated.\nof the profits and gains derived by an eligible start-up from three consecutive assessment years out of ten\n\n\n(iii) Meaning of eligible start-up:\n\n\n\n(iv) Meaning of eligible business:\n\nA business carried out by an eligible start-up engaged in \u2013\n\n\n\nInnovation, development or improvement of products or processes or services or\n\n\nConditions to be fulfilled:\nThis incentive is available to an eligible start-up which fulfils the following conditions:\nIt is not formed by splitting up, or the reconstruction, of a business already in existence.\nException: However, this condition shall not apply in the case of an undertaking which is formed as a result of reconstruction, re-establishment or revival of the business of any undertaking which has been discontinued in any previous year due to extensive damage or destruction of any building, machinery, plant or furniture owned by the assessee and used for the purposes of such business. Further, the reason for damage or destruction is due to any natural calamity or other unforeseen circumstances such\n\n\n(vi)\n\n\n\nas the following:\n\n\n\nFlood, typhoon, hurricane, cyclone, earthquake or other natural calamity, or\n\n\n\n(ii)\n\n\n\nriot or civil disturbance, or\n\n\n\n(iii)\n\n\n\naccidental fire or explosion, or\n\n\n\n(iv)\n\nenemy action or action taken in combat,\nand such business is re-established or revived within 3 years from the end of such previous year.\nIt is not formed by the transfer to a new business of machinery or plant previously used for any purpose.\nExceptions: However, any machinery or plant which was used outside India by any person other than the assessee shall not be regarded as machinery or plant previously used for any purpose, if all the following conditions are fulfilled, namely:\u2014\nsuch machinery or plant was not, at any time previous to the date of the installation by the assessee, used in India;\nsuch machinery or plant is imported into India;\nno deduction on account of depreciation in respect of such machinery or plant has been allowed or is allowable under the provisions of the Income-tax Act, 1961 in computing the total income of any person for any period prior to the date of the installation of the machinery or plant by the assessee.\nFurther, where in the case of a start-up, any machinery or plant or any part thereof previously used for any purpose is transferred to a new business and the total value of the machinery or plant or part so transferred does not exceed 20% of the total value of the machinery or plant used in the business, then, the condition specified that it should not be formed by transfer to a new business of plant and machinery used for any purpose shall be deemed to have been complied with.\nThe provisions of sub-section (5) and sub-section (7) to (11) of section 80-IA shall apply to the start-ups for the purpose of allowing deductions under 80-IAC(1).",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 80",
+      "section 80",
+      "sub-section (5)",
+      "sub-section (7)"
+    ],
+    "tokens": 676,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_1",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "Section 80-IAC provides an incentive to start-ups in order to aid their growth in the early phase of their business.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 80"
+    ],
+    "tokens": 26,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_2",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(ii)\n\n\n\nQuantum of deduction:\n\nAccordingly, a deduction of an eligible business is allowed for any years beginning from the year in which the eligible start up is incorporated.\nof the profits and gains derived by an eligible start-up from three consecutive assessment years out of ten",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 59,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_3",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(iii) Meaning of eligible start-up:",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 6,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_4",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(iv) Meaning of eligible business:\n\nA business carried out by an eligible start-up engaged in \u2013\n\n\n\nInnovation, development or improvement of products or processes or services or\n\n\nConditions to be fulfilled:\nThis incentive is available to an eligible start-up which fulfils the following conditions:\nIt is not formed by splitting up, or the reconstruction, of a business already in existence.\nException: However, this condition shall not apply in the case of an undertaking which is formed as a result of reconstruction, re-establishment or revival of the business of any undertaking which has been discontinued in any previous year due to extensive damage or destruction of any building, machinery, plant or furniture owned by the assessee and used for the purposes of such business. Further, the reason for damage or destruction is due to any natural calamity or other unforeseen circumstances such",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 183,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_5",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(vi)\n\n\n\nas the following:\n\n\n\nFlood, typhoon, hurricane, cyclone, earthquake or other natural calamity, or",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 18,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_6",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(ii)\n\n\n\nriot or civil disturbance, or",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 7,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_7",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(iii)\n\n\n\naccidental fire or explosion, or",
+    "contextualized_text": null,
+    "cross_references": [],
+    "tokens": 7,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "STARTU_S80_8",
+    "type": "child",
+    "parent_id": "STARTU_S80",
+    "act": "Startup",
+    "chapter": null,
+    "section_number": "80",
+    "section_title": "",
+    "text": "(iv)\n\nenemy action or action taken in combat,\nand such business is re-established or revived within 3 years from the end of such previous year.\nIt is not formed by the transfer to a new business of machinery or plant previously used for any purpose.\nExceptions: However, any machinery or plant which was used outside India by any person other than the assessee shall not be regarded as machinery or plant previously used for any purpose, if all the following conditions are fulfilled, namely:\u2014\nsuch machinery or plant was not, at any time previous to the date of the installation by the assessee, used in India;\nsuch machinery or plant is imported into India;\nno deduction on account of depreciation in respect of such machinery or plant has been allowed or is allowable under the provisions of the Income-tax Act, 1961 in computing the total income of any person for any period prior to the date of the installation of the machinery or plant by the assessee.\nFurther, where in the case of a start-up, any machinery or plant or any part thereof previously used for any purpose is transferred to a new business and the total value of the machinery or plant or part so transferred does not exceed 20% of the total value of the machinery or plant used in the business, then, the condition specified that it should not be formed by transfer to a new business of plant and machinery used for any purpose shall be deemed to have been complied with.\nThe provisions of sub-section (5) and sub-section (7) to (11) of section 80-IA shall apply to the start-ups for the purpose of allowing deductions under 80-IAC(1).",
+    "contextualized_text": null,
+    "cross_references": [
+      "section 80",
+      "sub-section (5)",
+      "sub-section (7)"
+    ],
+    "tokens": 366,
+    "source_file": "Startup_India_Tax_Exemption_80IAC.pdf",
+    "sentence_window": null
+  }
+]

@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     cohere_api_key: Optional[str] = None
     langsmith_api_key: Optional[str] = None
 
+    # === Custom LLM (OpenAI Compatible) ===
+    custom_llm_base_url: Optional[str] = None
+    custom_llm_api_key: Optional[str] = None
+    custom_llm_model: Optional[str] = None
+
     # === Ollama (local, free — alternative to Claude for enrichment) ===
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = "qwen2.5:7b"          # Any model pulled via `ollama pull`
@@ -25,6 +30,11 @@ class Settings(BaseSettings):
     # "claude"  → uses anthropic_api_key + contextualization_model (cloud, ~$1-2)
     # "ollama"  → uses ollama_base_url + ollama_model (local, free)
     enrichment_provider: str = "ollama"
+
+    # === Generation Provider ===
+    # "claude"  → uses anthropic_api_key + generation_model
+    # "ollama"  → uses ollama_base_url + ollama_model
+    generation_provider: str = "ollama"
 
     # === Embedding Provider ===
     # "local"   → BAAI/bge-large-en-v1.5 via sentence-transformers (free, 1024 dims)
@@ -55,6 +65,9 @@ class Settings(BaseSettings):
     child_chunk_size: int = 256
     parent_chunk_size: int = 1024
     child_chunk_overlap: int = 20
+
+    # === Pipeline & Retrieval Flags ===
+    use_knowledge_graph: bool = True
 
     # === Observability (Optional) ===
     langsmith_project: Optional[str] = None

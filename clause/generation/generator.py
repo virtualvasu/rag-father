@@ -72,13 +72,34 @@ def _call_claude(prompt: str, max_tokens: int = 1000) -> str:
     return response.content[0].text.strip()
 
 
+def _call_custom(prompt: str, max_tokens: int = 1000) -> str:
+    """Call Custom OpenAI-Compatible API."""
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url=settings.custom_llm_base_url,
+        api_key=settings.custom_llm_api_key,
+    )
+    response = client.chat.completions.create(
+        model=settings.custom_llm_model,
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.1,
+    )
+    return response.choices[0].message.content.strip()
+
+
 def _llm_call(prompt: str, max_tokens: int = 1000) -> str:
-    """Route LLM call based on enrichment_provider config (reusing same setting)."""
-    provider = settings.enrichment_provider
+    """Route LLM call based on generation_provider config."""
+    provider = settings.generation_provider
     if provider == "claude":
         if not settings.anthropic_api_key:
-            raise ValueError("ANTHROPIC_API_KEY not set — use enrichment_provider=ollama")
+            raise ValueError("ANTHROPIC_API_KEY not set — use generation_provider=ollama")
         return _call_claude(prompt, max_tokens)
+    elif provider == "custom":
+        if not settings.custom_llm_base_url or not settings.custom_llm_api_key or not settings.custom_llm_model:
+            raise ValueError("Custom LLM config missing")
+        return _call_custom(prompt, max_tokens)
     else:
         return _call_ollama(prompt, max_tokens)
 
@@ -157,7 +178,7 @@ def generate_answer(
         return {
             "answer": "I could not find relevant legal context to answer your question.",
             "citations": [],
-            "provider": settings.enrichment_provider,
+            "provider": settings.generation_provider,
             "chunks_used": 0,
         }
 
@@ -169,7 +190,7 @@ def generate_answer(
     )
 
     logger.info(
-        f"Generating answer | provider={settings.enrichment_provider} "
+        f"Generating answer | provider={settings.generation_provider} "
         f"| chunks={len(context_chunks)} | query='{query[:60]}...'"
     )
 
@@ -181,7 +202,7 @@ def generate_answer(
     return {
         "answer": answer,
         "citations": citations,
-        "provider": settings.enrichment_provider,
+        "provider": settings.generation_provider,
         "chunks_used": len(context_chunks),
     }
 

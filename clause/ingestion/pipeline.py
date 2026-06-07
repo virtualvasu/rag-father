@@ -174,11 +174,15 @@ async def run_ingestion_pipeline(
         await asyncio.to_thread(build_bm25_index, chunks_json, index_path=bm25_path)
 
         # Step 6: Knowledge Graph Construction (Neo4j)
-        if status_callback: status_callback("[Step 6/6] Constructing Knowledge Graph relationships (Neo4j)...")
-        logger.info("\n[Step 6] Building knowledge graph in Neo4j...")
-        nodes_created, edges_created = await asyncio.to_thread(
-            build_knowledge_graph, chunks_json, clear_existing=True
-        )
+        if settings.use_knowledge_graph:
+            if status_callback: status_callback("[Step 6/6] Constructing Knowledge Graph relationships (Neo4j)...")
+            logger.info("\n[Step 6] Building knowledge graph in Neo4j...")
+            nodes_created, edges_created = await asyncio.to_thread(
+                build_knowledge_graph, chunks_json, clear_existing=True
+            )
+        else:
+            if status_callback: status_callback("[Step 6/6] Knowledge Graph extraction SKIPPED (Vector-Only mode)...")
+            logger.info("\n[Step 6] Knowledge Graph extraction SKIPPED (use_knowledge_graph=False)")
 
     # Count chunk types
     chunk_counts: dict[str, int] = {}

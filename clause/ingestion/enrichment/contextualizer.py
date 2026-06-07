@@ -107,6 +107,40 @@ async def _contextualize_with_ollama(
 
 
 # ---------------------------------------------------------------------------
+# Custom provider (OpenAI-compatible endpoint)
+# ---------------------------------------------------------------------------
+
+async def _contextualize_with_custom(
+    child: LegalChunk,
+    parent: LegalChunk,
+    client,  # openai.AsyncOpenAI pointed at Custom
+    model: str,
+) -> LegalChunk:
+    """Contextualize a chunk using a custom OpenAI-compatible model."""
+    try:
+        response = await client.chat.completions.create(
+            model=model,
+            max_tokens=150,
+            messages=[{
+                "role": "user",
+                "content": CONTEXTUALIZATION_PROMPT.format(
+                    act_name=child.act,
+                    parent_text=parent.text,
+                    chunk_text=child.text,
+                ),
+            }],
+        )
+        context_sentence = response.choices[0].message.content.strip()
+        child.contextualized_text = f"{context_sentence}\n\n{child.text}"
+        logger.debug(f"[custom] Contextualized {child.chunk_id}")
+        return child
+
+    except Exception as e:
+        logger.error(f"[custom] Error contextualizing {child.chunk_id}: {e}")
+        child.contextualized_text = child.text
+        return child
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -123,6 +157,8 @@ async def contextualize_chunk(
     """
     if settings.enrichment_provider == "ollama":
         return await _contextualize_with_ollama(child, parent, client, model)
+    elif settings.enrichment_provider == "custom":
+        return await _contextualize_with_custom(child, parent, client, model)
     else:
         return await _contextualize_with_claude(child, parent, client, model)
 
@@ -160,6 +196,18 @@ async def contextualize_all(
         )
         model = settings.ollama_model
         logger.info(f"Using Ollama model: {model} at {settings.ollama_base_url}")
+    elif provider == "custom":
+        from openai import AsyncOpenAI
+        if not settings.custom_llm_base_url or not settings.custom_llm_api_key or not settings.custom_llm_model:
+            raise ValueError(
+                "CUSTOM_LLM config is required when enrichment_provider=custom. "
+            )
+        client = AsyncOpenAI(
+            base_url=settings.custom_llm_base_url,
+            api_key=settings.custom_llm_api_key,
+        )
+        model = settings.custom_llm_model
+        logger.info(f"Using Custom model: {model} at {settings.custom_llm_base_url}")
     else:
         import anthropic
         if not settings.anthropic_api_key:
