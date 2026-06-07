@@ -72,6 +72,7 @@ async def run_ingestion_pipeline(
     output_dir: str = "data/processed/",
     skip_enrichment: bool = False,
     skip_indexing: bool = False,
+    status_callback: Optional[callable] = None,
 ) -> dict:
     """
     Full pipeline: Parse → Chunk → Enrich → Index
@@ -105,17 +106,19 @@ async def run_ingestion_pipeline(
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Step 1: Parse all PDFs and HTMLs (also extracts tables)
+    if status_callback: status_callback("[Step 1/6] Extracting text and tables from documents...")
     logger.info("\n[Step 1] Parsing documents...")
-    parsed_docs, tables_by_file = parse_all_documents(source_dir)
+    parsed_docs, tables_by_file = await asyncio.to_thread(parse_all_documents, source_dir)
 
     if not parsed_docs:
         logger.warning("No documents found to parse")
         return {"chunks_created": 0, "documents_parsed": 0}
 
     # Step 2: Create chunks with hierarchy (parent, child, table)
+    if status_callback: status_callback("[Step 2/6] Creating hierarchical chunks...")
     logger.info("\n[Step 2] Creating hierarchical chunks...")
     doc_metadata: dict = {}  # Can be extended with act metadata
-    chunks = create_hierarchical_chunks(parsed_docs, doc_metadata, tables_by_file)
+    chunks = await asyncio.to_thread(create_hierarchical_chunks, parsed_docs, doc_metadata, tables_by_file)
 
     # Save raw chunks
     chunks_file = output_path / "chunks" / "raw_chunks.json"
@@ -127,6 +130,7 @@ async def run_ingestion_pipeline(
 
     # Step 3: Enrich chunks with context (optional)
     if not skip_enrichment:
+        if status_callback: status_callback("[Step 3/6] Enriching chunks via local LLM (This may take a while)...")
         logger.info("\n[Step 3] Enriching chunks with context...")
         # Only child chunks need contextualisation; table chunks are used as-is
         children = [c for c in chunks if c.type == "child"]
@@ -159,18 +163,21 @@ async def run_ingestion_pipeline(
         logger.info("\n[Steps 4-6] Indexing SKIPPED (--skip-indexing flag)")
     else:
         # Step 4: Embedding & Vector Indexing (Qdrant)
+        if status_callback: status_callback("[Step 4/6] Creating embeddings and indexing into Vector DB (Qdrant)...")
         logger.info("\n[Step 4] Embedding & indexing into Qdrant...")
-        points_indexed = index_chunks_to_qdrant(chunks_json)
+        points_indexed = await asyncio.to_thread(index_chunks_to_qdrant, chunks_json)
 
         # Step 5: BM25 Sparse Indexing
+        if status_callback: status_callback("[Step 5/6] Building sparse keyword index (BM25)...")
         logger.info("\n[Step 5] Building BM25 sparse index...")
         bm25_path = str(output_path / "bm25_index.pkl")
-        build_bm25_index(chunks_json, index_path=bm25_path)
+        await asyncio.to_thread(build_bm25_index, chunks_json, index_path=bm25_path)
 
         # Step 6: Knowledge Graph Construction (Neo4j)
+        if status_callback: status_callback("[Step 6/6] Constructing Knowledge Graph relationships (Neo4j)...")
         logger.info("\n[Step 6] Building knowledge graph in Neo4j...")
-        nodes_created, edges_created = build_knowledge_graph(
-            chunks_json, clear_existing=True
+        nodes_created, edges_created = await asyncio.to_thread(
+            build_knowledge_graph, chunks_json, clear_existing=True
         )
 
     # Count chunk types

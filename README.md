@@ -7,7 +7,8 @@ Rag-Father is a containerized, self-service Retrieval-Augmented Generation (RAG)
 Before running the system, ensure the following dependencies are installed and running on your host machine:
 
 * **Docker & Docker Compose**: Required for orchestrating the frontend, backend, and databases.
-* **Ollama**: Must be installed and running locally. The system communicates with Ollama via the Docker host-gateway to perform contextual enrichment and answer generation. Ensure your target models (e.g., `llama3`) are pulled and available.
+* **Ollama**: Must be installed and running locally. The system communicates with Ollama via the Docker host-gateway to perform contextual enrichment and answer generation. Ensure your target models (e.g., `qwen2.5:7b`) are pulled and available.
+  * **CRITICAL**: By default, Ollama only listens on `localhost` (`127.0.0.1`), which blocks Docker containers from accessing it. You **MUST** configure your Ollama system service to listen on all interfaces by setting the environment variable `OLLAMA_HOST=0.0.0.0`.
 
 ## 3. System Pipeline
 
@@ -70,7 +71,7 @@ The system is deployed via Docker Compose and consists of four isolated services
 Follow these steps to deploy and use the system:
 
 1. **Verify Ollama**
-Ensure the Ollama daemon is active on your host machine and listening on port `11434`.
+Ensure the Ollama daemon is active on your host machine and listening on all interfaces (`OLLAMA_HOST=0.0.0.0`).
 
 2. **Deploy the Stack**
 Navigate to the root directory of the repository and build the Docker containers:
