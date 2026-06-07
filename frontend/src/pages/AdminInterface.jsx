@@ -64,9 +64,35 @@ const AdminInterface = ({ isDark }) => {
         setPipelineStatus('running');
         setPipelineMessage('Pipeline execution started...');
         setPipelineResult(null);
+      } else {
+        const errorData = await response.json();
+        setPipelineMessage(`> Error: ${errorData.detail || 'Failed to start pipeline'}`);
+        setPipelineStatus('failed');
       }
     } catch (error) {
       console.error("Failed to start pipeline", error);
+      setPipelineMessage(`> Error: Could not connect to server`);
+      setPipelineStatus('failed');
+    }
+  };
+
+  const handleReset = async () => {
+    if (window.confirm("ARE YOU SURE? This will permanently delete all uploaded PDFs and reset the workspace data. The databases will be fully overwritten on the next pipeline run.")) {
+      try {
+        setPipelineMessage('Wiping system data...');
+        const response = await fetch('/api/pipeline/reset', { method: 'DELETE' });
+        if (response.ok) {
+          const data = await response.json();
+          setPipelineMessage(`> ${data.message}`);
+          setPipelineStatus('idle');
+          setPipelineResult(null);
+        } else {
+          setPipelineMessage('> Error: Failed to reset system.');
+        }
+      } catch (error) {
+        console.error("Failed to reset system", error);
+        setPipelineMessage('> Error: Could not connect to server.');
+      }
     }
   };
 
@@ -126,16 +152,26 @@ const AdminInterface = ({ isDark }) => {
                 Run the ingestion and indexing pipeline. This will chunk the uploaded documents, enrich them, and populate the Qdrant and Neo4j databases.
               </p>
               
-              <button 
-                onClick={startPipeline}
-                disabled={pipelineStatus === 'running'}
-                className="w-full py-3 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-secondary-fixed-dim disabled:opacity-50 transition-all flex justify-center items-center gap-2"
-              >
-                {pipelineStatus === 'running' && (
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>
-                )}
-                {pipelineStatus === 'running' ? 'PIPELINE RUNNING' : 'START PIPELINE'}
-              </button>
+              <div className="flex gap-4">
+                <button 
+                  onClick={startPipeline}
+                  disabled={pipelineStatus === 'running'}
+                  className="flex-1 py-3 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-secondary-fixed-dim disabled:opacity-50 transition-all flex justify-center items-center gap-2"
+                >
+                  {pipelineStatus === 'running' && (
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>
+                  )}
+                  {pipelineStatus === 'running' ? 'PIPELINE RUNNING' : 'START PIPELINE'}
+                </button>
+
+                <button 
+                  onClick={handleReset}
+                  disabled={pipelineStatus === 'running'}
+                  className="flex-1 py-3 bg-error text-on-error font-mono text-sm uppercase hover:bg-[#ff5449] disabled:opacity-50 transition-all"
+                >
+                  RESET SYSTEM
+                </button>
+              </div>
 
               {/* Status Terminal */}
               <div className="bg-[#0c1324] dark:bg-[#060908] border border-outline-variant p-4 h-48 overflow-y-auto">

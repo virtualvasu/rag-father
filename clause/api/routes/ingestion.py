@@ -6,6 +6,7 @@ import os
 import json
 import logging
 import asyncio
+import shutil
 from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException
 from pydantic import BaseModel
@@ -98,6 +99,13 @@ async def start_pipeline(background_tasks: BackgroundTasks, skip_enrichment: boo
     if pipeline_job["status"] == "running":
         raise HTTPException(status_code=400, detail="Pipeline is already running.")
         
+    raw_dir = Path("data/raw")
+    has_pdf = next(raw_dir.glob("**/*.pdf"), None) is not None if raw_dir.exists() else False
+    has_html = next(raw_dir.glob("**/*.html"), None) is not None if raw_dir.exists() else False
+    
+    if not (has_pdf or has_html):
+        raise HTTPException(status_code=400, detail="No documents found. Please upload PDF files before starting the pipeline.")
+        
     background_tasks.add_task(run_full_pipeline, skip_enrichment)
     return {"message": "Pipeline execution started in the background."}
 
@@ -106,3 +114,25 @@ async def get_pipeline_status():
     """Check the status of the currently running or last completed pipeline job."""
     global pipeline_job
     return pipeline_job
+
+@router.delete("/pipeline/reset")
+async def reset_pipeline_data():
+    """Wipe all raw and processed data to start fresh."""
+    raw_dir = Path("data/raw")
+    processed_dir = Path("data/processed")
+    
+    try:
+        if raw_dir.exists():
+            shutil.rmtree(raw_dir)
+        if processed_dir.exists():
+            shutil.rmtree(processed_dir)
+            
+        # Recreate empty directories immediately so subsequent uploads don't fail
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        processed_dir.mkdir(parents=True, exist_ok=True)
+        (processed_dir / "chunks").mkdir(parents=True, exist_ok=True)
+        
+        return {"message": "System reset successful. All data files wiped."}
+    except Exception as e:
+        logger.error(f"Failed to reset data directories: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset system: {str(e)}")
