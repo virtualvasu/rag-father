@@ -58,7 +58,7 @@ from qdrant_client.models import (
     VectorParams, Distance, PointStruct, PayloadSchemaType
 )
 
-COLLECTION_NAME = "clause_chunks"
+COLLECTION_NAME = "ragfather_chunks"
 VECTOR_SIZE = 3072  # text-embedding-3-large output dimensions
 
 def create_collection(client: QdrantClient):

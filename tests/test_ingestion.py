@@ -2,8 +2,8 @@
 
 import pytest
 from pathlib import Path
-from clause.ingestion.chunkers import LegalChunk
-from clause.ingestion.chunkers.section_chunker import (
+from ragfather.ingestion.chunkers import LegalChunk
+from ragfather.ingestion.chunkers.section_chunker import (
     create_legal_chunks,
     extract_cross_references,
     count_tokens,

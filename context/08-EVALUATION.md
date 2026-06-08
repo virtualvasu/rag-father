@@ -20,13 +20,13 @@
 python scripts/run_eval.py --all
 
 # Single variant — faster (1-2 hours)
-python scripts/run_eval.py --variant clause_full
+python scripts/run_eval.py --variant ragfather_full
 
 # Skip RAGAS scoring — just collect answers fast (~30 min)
 python scripts/run_eval.py --all --skip-ragas
 
 # Debug single question
-python scripts/run_eval.py --variant clause_full --question Q001 --skip-ragas
+python scripts/run_eval.py --variant ragfather_full --question Q001 --skip-ragas
 ```
 
 Results are saved to `data/eval/results/benchmark_<timestamp>.json`.
@@ -39,7 +39,7 @@ Results are saved to `data/eval/results/benchmark_<timestamp>.json`.
 
 ### RAGAS Metrics
 
-| Metric | naive_rag | advanced_rag | clause_full |
+| Metric | naive_rag | advanced_rag | ragfather_full |
 |---|---|---|---|
 | Faithfulness | 0.61 | 0.585 | **0.642** ← winner |
 | Answer Relevancy | 0.94 | **0.945** | 0.91 |
@@ -48,7 +48,7 @@ Results are saved to `data/eval/results/benchmark_<timestamp>.json`.
 | **Avg Score** | 0.622 | 0.605 | 0.589 |
 | **Avg Latency (s)** | 3.77 | 11.93 | 24.28 |
 
-### CRAG Context Quality by Category (clause_full only)
+### CRAG Context Quality by Category (ragfather_full only)
 
 | Category | CRAG Score |
 |---|---|
@@ -63,10 +63,10 @@ The addition of an expert-written ground truth dataset (highly detailed, section
 
 1. **`context_recall` represents a realistic legal baseline (0.24–0.34)**
    When evaluated against vague questions, the system seemed to have ~0.50 recall. But when evaluated against *expert* answers containing specific thresholds (e.g., "200 persons", "60 days", "Section 166"), recall settled at ~0.34. This is a highly realistic baseline for retrieving dense legal rules using standard dense embeddings.
-2. **`clause_full` trades Recall for Faithfulness**
-   `clause_full` has lower recall (0.241) than `naive_rag` (0.338). Why? Graph traversal and cross-encoder reranking often surface related conceptual nodes (displacing specific factual chunks), and the CRAG query refinement can sometimes over-constrain the search.
-3. **But `clause_full` remains the most Faithful (0.642)**
-   Despite retrieving a narrower set of facts, `clause_full` hallucinates the least. The CRAG loop successfully detects when the context is insufficient and prevents the LLM from inventing answers, trading broad recall for strict legal accuracy.
+2. **`ragfather_full` trades Recall for Faithfulness**
+   `ragfather_full` has lower recall (0.241) than `naive_rag` (0.338). Why? Graph traversal and cross-encoder reranking often surface related conceptual nodes (displacing specific factual chunks), and the CRAG query refinement can sometimes over-constrain the search.
+3. **But `ragfather_full` remains the most Faithful (0.642)**
+   Despite retrieving a narrower set of facts, `ragfather_full` hallucinates the least. The CRAG loop successfully detects when the context is insufficient and prevents the LLM from inventing answers, trading broad recall for strict legal accuracy.
 4. **Clean Latency Ablation**
    3.77s → 11.93s → 24.28s cleanly demonstrates the cost of each architectural layer (Vector → Hybrid+Rerank → Graph+CRAG).
 
@@ -232,7 +232,7 @@ async def run_benchmark():
     variants = {
         "naive_rag": create_naive_rag_system(),
         "advanced_rag": create_advanced_rag_system(),
-        "clause_full": create_full_system(),
+        "ragfather_full": create_full_system(),
     }
     
     results = {}
@@ -316,10 +316,10 @@ CONDITIONAL (avg expected: 0.60-0.75)
 python scripts/run_eval.py --all
 
 # Run single variant
-python scripts/run_eval.py --variant clause_full
+python scripts/run_eval.py --variant ragfather_full
 
 # Run single question for debugging
-python scripts/run_eval.py --question Q001 --variant clause_full
+python scripts/run_eval.py --question Q001 --variant ragfather_full
 ```
 
 ---

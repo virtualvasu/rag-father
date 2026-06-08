@@ -288,7 +288,7 @@ Return ONLY the refined query text, no explanation.
 
 **Prompt:**
 ```
-You are Clause, a legal AI assistant specialised in Indian startup and corporate law.
+You are Ragfather, a legal AI assistant specialised in Indian startup and corporate law.
 
 You are answering a question using the following retrieved legal context.
 Base your answer ONLY on the provided context. Do not use prior knowledge.
@@ -338,7 +338,7 @@ CONTEXT_BLOCK_TEMPLATE = "..."
 
 # ============ USAGE ============
 # Import in other modules:
-# from clause.generation.prompts import GENERATION_PROMPT, CRAG_CHECK_PROMPT
+# from ragfather.generation.prompts import GENERATION_PROMPT, CRAG_CHECK_PROMPT
 ```
 
 ---

@@ -28,7 +28,7 @@ python scripts/run_query.py "..." --no-graph      # skip graph expansion
 
 ```python
 # Python API
-from clause.query import answer_query
+from ragfather.query import answer_query
 
 result = answer_query("What are the filing requirements for a private company?")
 print(result["answer"])     # full answer with citations
@@ -48,7 +48,7 @@ Covers Step 9: LLM-based generation and citation extraction.
 **File**: `clause/generation/prompts.py`
 
 ```python
-GENERATION_PROMPT = """You are Clause, a legal AI assistant specialised in Indian startup and corporate law.
+GENERATION_PROMPT = """You are Ragfather, a legal AI assistant specialised in Indian startup and corporate law.
 
 You are answering a question using the following retrieved legal context.
 Base your answer ONLY on the provided context. Do not use prior knowledge.
@@ -81,7 +81,7 @@ Source: {act}, {section_number} — {section_title}
 
 ```python
 import anthropic
-from clause.config import settings
+from ragfather.config import settings
 
 async def generate_answer(
     query: str,

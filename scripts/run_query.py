@@ -20,7 +20,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-from clause.query import answer_query
+from ragfather.query import answer_query
 
 
 def main():

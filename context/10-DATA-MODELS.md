@@ -283,7 +283,7 @@ class Settings(BaseSettings):
     
     # Databases
     qdrant_url: str = "http://localhost:6333"
-    qdrant_collection_name: str = "clause_chunks"
+    qdrant_collection_name: str = "ragfather_chunks"
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_username: str = "neo4j"
     neo4j_password: str
@@ -320,20 +320,20 @@ chunk: LegalChunk = parse_and_chunk(document)
 
 **In retrieval:**
 ```python
-from clause.api.schemas import QueryRequest, QueryResponse
+from ragfather.api.schemas import QueryRequest, QueryResponse
 request: QueryRequest = QueryRequest(query="...")
 response: QueryResponse = await run_query(request)
 ```
 
 **In agent:**
 ```python
-from clause.agent.state import ClauseState
+from ragfather.agent.state import ClauseState
 state: ClauseState = {...}
 ```
 
 **In config:**
 ```python
-from clause.config import settings
+from ragfather.config import settings
 client = QdrantClient(url=settings.qdrant_url)
 ```
 

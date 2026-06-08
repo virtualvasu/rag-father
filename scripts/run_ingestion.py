@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from clause.ingestion.pipeline import run_ingestion_pipeline
+from ragfather.ingestion.pipeline import run_ingestion_pipeline
 
 # Configure logging
 logging.basicConfig(

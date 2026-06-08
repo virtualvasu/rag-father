@@ -19,9 +19,9 @@ from pathlib import Path
 # Allow running from project root
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from clause.indexing.vector_indexer import index_chunks_to_qdrant
-from clause.indexing.bm25_indexer import build_bm25_index
-from clause.indexing.graph_indexer import build_knowledge_graph
+from ragfather.indexing.vector_indexer import index_chunks_to_qdrant
+from ragfather.indexing.bm25_indexer import build_bm25_index
+from ragfather.indexing.graph_indexer import build_knowledge_graph
 
 logging.basicConfig(
     level=logging.INFO,

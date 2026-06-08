@@ -107,7 +107,7 @@ OPENAI_API_KEY=sk-...
 
 # === Vector Database ===
 QDRANT_URL=http://localhost:6333
-QDRANT_COLLECTION_NAME=clause_chunks
+QDRANT_COLLECTION_NAME=ragfather_chunks
 
 # === Graph Database ===
 NEO4J_URI=bolt://localhost:7687
@@ -203,7 +203,7 @@ class Settings(BaseSettings):
 
     # === Qdrant (Vector DB) ===
     qdrant_url: str = "http://localhost:6333"
-    qdrant_collection_name: str = "clause_chunks"
+    qdrant_collection_name: str = "ragfather_chunks"
 
     # === Neo4j (Graph DB) ===
     neo4j_uri: str = "bolt://localhost:7687"
@@ -237,7 +237,7 @@ settings = Settings()
 ### Usage in Code
 
 ```python
-from clause.config import settings
+from ragfather.config import settings
 
 # In any module:
 qdrant_client = QdrantClient(url=settings.qdrant_url)

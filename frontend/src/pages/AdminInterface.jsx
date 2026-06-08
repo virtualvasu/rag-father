@@ -13,6 +13,12 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
   const [agentStatus, setAgentStatus] = useState("idle");
   const [agentLogs, setAgentLogs] = useState([]);
   const [previewDoc, setPreviewDoc] = useState(null);
+  
+  // System Prompt states
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [promptUseCase, setPromptUseCase] = useState("");
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+
   const [pipelineConfig, setPipelineConfig] = useState({
     skip_enrichment: false,
     use_knowledge_graph: true,
@@ -209,6 +215,64 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
     }
   };
 
+  const fetchSystemPrompt = async () => {
+    try {
+      const res = await fetch('/api/system/prompt');
+      if (res.ok) {
+        const data = await res.json();
+        setSystemPrompt(data.system_prompt || "");
+      }
+    } catch (err) {
+      console.error("Failed to fetch system prompt", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSystemPrompt();
+  }, []);
+
+  const handleSavePrompt = async () => {
+    try {
+      const res = await fetch('/api/system/prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system_prompt: systemPrompt })
+      });
+      if (res.ok) {
+        alert("System prompt saved successfully!");
+      } else {
+        alert("Failed to save system prompt.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving system prompt.");
+    }
+  };
+
+  const handleGeneratePrompt = async () => {
+    if (!promptUseCase.trim()) return;
+    setIsGeneratingPrompt(true);
+    try {
+      const res = await fetch('/api/system/generate-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ use_case: promptUseCase })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSystemPrompt(data.system_prompt);
+        alert("System prompt generated and saved!");
+      } else {
+        alert("Failed to generate system prompt.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error generating system prompt.");
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
   const handleResetAgent = async () => {
     try {
       await fetch('/api/agent/reset', { method: 'POST' });
@@ -352,9 +416,56 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
             </div>
           </div>
 
+          {/* System Identity Section */}
+          <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
+            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">2. System Identity (Prompt)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <p className="text-sm font-mono text-on-surface-variant">
+                  Define the core persona and instructions for the RAG assistant. You can manually edit the prompt or use the AI to generate a highly robust prompt based on your use case.
+                </p>
+                <div>
+                  <label className="block text-xs font-mono text-on-surface-variant mb-1">Auto-Generate from Use Case</label>
+                  <input 
+                    type="text" 
+                    value={promptUseCase}
+                    onChange={(e) => setPromptUseCase(e.target.value)}
+                    placeholder="e.g. Medical RAG for clinical guidelines" 
+                    className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary mb-2" 
+                    disabled={isGeneratingPrompt}
+                  />
+                  <button 
+                    onClick={handleGeneratePrompt}
+                    disabled={!promptUseCase.trim() || isGeneratingPrompt}
+                    className="w-full py-2 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-opacity-90 disabled:opacity-50 transition-all flex justify-center items-center gap-2"
+                  >
+                    {isGeneratingPrompt && <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>}
+                    {isGeneratingPrompt ? 'GENERATING MAGIC PROMPT...' : 'GENERATE MAGIC PROMPT'}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-4 flex flex-col">
+                <label className="block text-xs font-mono text-on-surface-variant mb-1">System Prompt</label>
+                <textarea
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  className="w-full flex-grow min-h-[150px] bg-surface border border-outline-variant p-3 text-sm font-mono text-on-surface focus:outline-none focus:border-primary resize-y"
+                  disabled={isGeneratingPrompt}
+                />
+                <button 
+                  onClick={handleSavePrompt}
+                  disabled={isGeneratingPrompt}
+                  className="w-full py-2 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary transition-all"
+                >
+                  SAVE PROMPT
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Configuration Section */}
           <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">2. Pipeline Configuration</h2>
+            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">3. Pipeline Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <h3 className="font-mono text-sm text-primary uppercase">Provider Settings</h3>
@@ -469,7 +580,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
 
           {/* Pipeline Section */}
           <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">3. Processing Pipeline</h2>
+            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">4. Processing Pipeline</h2>
             <div className="space-y-6">
               <p className="text-body-sm text-on-surface-variant">
                 Run the ingestion and indexing pipeline. This will chunk the uploaded documents, enrich them, and populate the Qdrant and Neo4j databases.

@@ -18,7 +18,7 @@
 ```bash
 # Terminal 1 - Start Backend
 cd /home/netweb/vasu/clause-rag-v1
-venv/bin/uvicorn clause.api.main:app --port 8000 --host 0.0.0.0 --reload
+venv/bin/uvicorn ragfather.api.main:app --port 8000 --host 0.0.0.0 --reload
 
 # Terminal 2 - Start Frontend
 cd /home/netweb/vasu/clause-rag-v1/frontend
@@ -213,7 +213,7 @@ def create_app() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
     
     # Routes
-    from clause.api.routes import query_routes, ingest_routes
+    from ragfather.api.routes import query_routes, ingest_routes
     app.include_router(query_routes.router)
     app.include_router(ingest_routes.router)
     
@@ -224,7 +224,7 @@ app = create_app()
 
 **Run locally:**
 ```bash
-uvicorn clause.api.main:app --reload --port 8000
+uvicorn ragfather.api.main:app --reload --port 8000
 ```
 
 Docs available at `http://localhost:8000/docs` (Swagger UI).
@@ -365,7 +365,7 @@ Key UI features:
 docker-compose up -d
 
 # Terminal 2: API
-uvicorn clause.api.main:app --reload
+uvicorn ragfather.api.main:app --reload
 
 # Terminal 3: Frontend
 streamlit run frontend/app.py

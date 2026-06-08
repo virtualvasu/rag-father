@@ -233,7 +233,7 @@ ACT_ABBREVIATIONS = {
 
 import asyncio
 import anthropic
-from clause.ingestion.chunkers.section_chunker import LegalChunk
+from ragfather.ingestion.chunkers.section_chunker import LegalChunk
 
 CONTEXTUALIZATION_PROMPT = """You are processing a legal document for a RAG retrieval system.
 

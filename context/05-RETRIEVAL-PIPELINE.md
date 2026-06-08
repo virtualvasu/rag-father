@@ -31,7 +31,7 @@
 
 ### Usage
 ```python
-from clause.retrieval.hybrid_retriever import hybrid_retrieve
+from ragfather.retrieval.hybrid_retriever import hybrid_retrieve
 
 result = hybrid_retrieve(
     query="What are the eligibility criteria for DPIIT startup recognition?",
@@ -169,7 +169,7 @@ def dense_search(query: str, qdrant_client: QdrantClient, top_k: int = 20) -> li
     ).data[0].embedding
     
     results = qdrant_client.search(
-        collection_name="clause_chunks",
+        collection_name="ragfather_chunks",
         query_vector=query_embedding,
         limit=top_k
     )
@@ -192,7 +192,7 @@ def dense_search(query: str, qdrant_client: QdrantClient, top_k: int = 20) -> li
 **File**: `clause/retrieval/sparse_retriever.py`
 
 ```python
-from clause.indexing.bm25_index import load_bm25_index
+from ragfather.indexing.bm25_index import load_bm25_index
 
 def sparse_search(query: str, top_k: int = 20) -> list[dict]:
     """

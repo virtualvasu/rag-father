@@ -3,9 +3,9 @@ CLI for running the evaluation benchmark.
 
 Usage:
     python scripts/run_eval.py --all                         # full benchmark
-    python scripts/run_eval.py --variant clause_full         # single variant
-    python scripts/run_eval.py --variant clause_full --skip-ragas   # just collect answers
-    python scripts/run_eval.py --question Q001 --variant clause_full # debug one question
+    python scripts/run_eval.py --variant ragfather_full         # single variant
+    python scripts/run_eval.py --variant ragfather_full --skip-ragas   # just collect answers
+    python scripts/run_eval.py --question Q001 --variant ragfather_full # debug one question
 """
 
 import argparse
@@ -20,7 +20,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-from clause.evaluation.benchmark import run_benchmark, VARIANTS
+from ragfather.evaluation.benchmark import run_benchmark, VARIANTS
 
 
 def main():
