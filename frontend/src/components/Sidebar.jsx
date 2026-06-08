@@ -11,8 +11,8 @@ export default function Sidebar() {
             <Gavel className="text-surface group-hover:text-surface w-4 h-4 transition-colors" />
           </div>
           <div>
-            <h1 className="font-headline-md text-2xl text-on-surface uppercase font-bold tracking-tight">Clause</h1>
-            <p className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Institutional Grade</p>
+            <h1 className="font-headline-md text-2xl text-on-surface uppercase font-bold tracking-tight">Ragfather</h1>
+            <p className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Enterprise Grade</p>
           </div>
         </Link>
       </div>

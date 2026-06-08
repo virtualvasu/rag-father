@@ -78,7 +78,7 @@ export default function ChatInterface({ toggleTheme, isDark }) {
       const errorMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "An error occurred while connecting to the Clause API. Please check if the backend is running.",
+        content: "An error occurred while connecting to the Ragfather API. Please check if the backend is running.",
         isError: true,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -111,9 +111,9 @@ export default function ChatInterface({ toggleTheme, isDark }) {
           {/* Context Header */}
           <header className="h-[60px] min-h-[60px] border-b border-on-surface flex items-center justify-between px-lg bg-surface/90 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
             <div className="flex items-center gap-4">
-              <span className="font-mono text-xs text-on-surface-variant uppercase tracking-widest bg-on-surface/10 px-2 py-1">Clause_OS</span>
+              <span className="font-mono text-xs text-on-surface-variant uppercase tracking-widest bg-on-surface/10 px-2 py-1">Ragfather_OS</span>
               <h2 className="font-headline-md text-xl text-on-surface truncate">
-                {messages.length > 0 ? "Legal_Analysis_Active" : "Awaiting_Query"}
+                {messages.length > 0 ? "Analysis_Active" : "Awaiting_Query"}
               </h2>
             </div>
             <div className="flex items-center gap-sm">
@@ -129,11 +129,11 @@ export default function ChatInterface({ toggleTheme, isDark }) {
               <div className="flex-1 flex flex-col items-center justify-center opacity-50">
                 <Scale className="w-16 h-16 text-primary mb-6" />
                 <h3 className="font-headline-lg text-4xl text-on-surface mb-2 flex items-center justify-center gap-2">
-                  Clause Active
+                  Ragfather Active
                   <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="inline-block w-4 h-8 bg-primary"></motion.span>
                 </h3>
                 <p className="font-mono text-sm text-on-surface-variant text-center max-w-md uppercase tracking-widest">
-                  Awaiting parameters for legal extraction and timeline construction.
+                  Awaiting parameters for document extraction and timeline construction.
                 </p>
               </div>
             ) : (

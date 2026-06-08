@@ -97,7 +97,7 @@ export default function LandingPage({ toggleTheme, isDark }) {
         <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-md w-full max-w-[1440px] mx-auto">
           {/* Brand */}
           <div className="flex items-center gap-md cursor-pointer group">
-            <span className="font-headline-md text-headline-md font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors duration-300">CLAUSE.</span>
+            <span className="font-headline-md text-headline-md font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors duration-300">RAGFATHER.</span>
           </div>
           
           {/* Navigation Links */}
@@ -148,12 +148,12 @@ export default function LandingPage({ toggleTheme, isDark }) {
             className="flex flex-col items-center gap-lg z-10 w-full max-w-5xl"
           >
             <motion.div variants={itemVariants} className="inline-flex items-center gap-4 px-4 py-1 border border-on-surface mb-8 bg-surface">
-              <span className="font-mono text-label-sm text-on-surface uppercase tracking-[0.3em]">Clause AI // Institutional Grade</span>
+              <span className="font-mono text-label-sm text-on-surface uppercase tracking-[0.3em]">Ragfather // Enterprise Grade</span>
             </motion.div>
 
             <motion.h1 variants={itemVariants} className="font-headline-xl text-[6rem] leading-[1] md:text-[10rem] text-on-surface tracking-tighter mb-2 relative uppercase">
               <span className="absolute -left-12 top-0 text-xl font-mono text-secondary">01.</span>
-              Clause<span className="text-primary">.</span>
+              Ragfather<span className="text-primary">.</span>
             </motion.h1>
             
             <motion.h2 variants={itemVariants} className="font-headline-md text-2xl md:text-4xl text-on-surface-variant font-light italic mb-8">
@@ -161,7 +161,7 @@ export default function LandingPage({ toggleTheme, isDark }) {
             </motion.h2>
             
             <motion.p variants={itemVariants} className="font-body-lg text-body-lg md:text-xl text-on-surface-variant max-w-2xl font-light leading-relaxed border-l-2 border-primary pl-6 text-left self-center">
-              Navigate intricate corporate law, extract hidden liabilities, and establish irrefutable factual timelines. Clause is your AI-powered legal assistant for the Companies Act, SEBI, and MCA Rules.
+              Ingest massive document sets, extract hidden connections, and establish irrefutable factual timelines. Ragfather is your AI-powered GraphRAG engine for complex data.
             </motion.p>
             
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-6 mt-12 w-full justify-center border-t border-outline-variant/30 pt-12">
@@ -267,8 +267,8 @@ export default function LandingPage({ toggleTheme, isDark }) {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border-y border-outline-variant/30">
             {[
-              { label: 'Legal Chunks', value: '7,367', color: 'text-primary' },
-              { label: 'Core Acts', value: '3', color: 'text-secondary' },
+              { label: 'Document Chunks', value: '7,367', color: 'text-primary' },
+              { label: 'Core Sources', value: '3', color: 'text-secondary' },
               { label: 'Faithfulness', value: '0.984', color: 'text-primary' },
               { label: 'Avg. Response', value: '24ms', color: 'text-secondary' },
             ].map((stat, i) => (
@@ -302,7 +302,7 @@ export default function LandingPage({ toggleTheme, isDark }) {
               <div>
                 <h3 className="font-headline-md text-3xl text-on-surface mb-4">Comprehensive Corpus</h3>
                 <p className="font-body-md text-lg text-on-surface-variant max-w-md font-light">
-                  Instantly search and analyze across the entire Companies Act 2013, SEBI Regulations, DPIIT Guidelines, and detailed MCA Rules.
+                  Instantly search and analyze across massive document collections, extracting deep connections.
                 </p>
               </div>
             </motion.div>
@@ -328,7 +328,7 @@ export default function LandingPage({ toggleTheme, isDark }) {
               <div>
                 <h3 className="font-headline-md text-2xl text-on-surface mb-3">Verifiable Citations</h3>
                 <p className="font-body-sm text-on-surface-variant font-light">
-                  Every assertion is mathematically mapped to its precise legal source and section.
+                  Every assertion is mathematically mapped to its precise document source and section.
                 </p>
               </div>
             </motion.div>
@@ -342,7 +342,7 @@ export default function LandingPage({ toggleTheme, isDark }) {
                 </div>
                 <h3 className="font-headline-md text-3xl text-on-surface mb-4">Enterprise Privacy</h3>
                 <p className="font-body-md text-lg text-on-surface-variant max-w-sm font-light">
-                  Built for institutional security. Clause runs securely without exposing your proprietary inquiries or data to public models.
+                  Built for institutional security. Ragfather runs securely without exposing your proprietary inquiries or data to public models.
                 </p>
               </div>
               <div className="w-full md:w-auto font-mono text-5xl text-outline-variant/20 tracking-tighter self-end">
@@ -357,12 +357,12 @@ export default function LandingPage({ toggleTheme, isDark }) {
       <footer className="bg-surface w-full border-t border-on-surface z-40 relative mt-24">
         <div className="flex flex-col justify-center items-center px-margin-mobile md:px-margin-desktop py-16 w-full max-w-[1440px] mx-auto gap-8">
           <div className="flex items-center justify-between w-full border-b border-outline-variant/30 pb-8">
-            <span className="font-headline-md text-2xl text-on-surface font-bold tracking-tight">CLAUSE.</span>
+            <span className="font-headline-md text-2xl text-on-surface font-bold tracking-tight">RAGFATHER.</span>
             <span className="font-mono text-xs uppercase tracking-widest text-on-surface-variant">System Offline</span>
           </div>
           <div className="flex flex-col md:flex-row justify-between w-full items-center gap-4">
             <span className="font-mono text-xs text-on-surface-variant">
-              © 2026 Clause Legal Technologies.
+              © 2026 Ragfather Technologies.
             </span>
             <div className="flex gap-8">
               {['Privacy', 'Terms', 'Security', 'API'].map((link) => (

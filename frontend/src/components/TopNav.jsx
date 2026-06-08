@@ -8,7 +8,7 @@ export default function TopNav({ toggleTheme, isDark }) {
         {/* Brand */}
         <Link to="/" className="flex items-center gap-md cursor-pointer group">
           <Gavel className="text-primary w-6 h-6 group-hover:scale-110 transition-transform" />
-          <span className="font-headline-md text-headline-md font-bold text-primary tracking-tight">Clause</span>
+          <span className="font-headline-md text-headline-md font-bold text-primary tracking-tight">Ragfather</span>
         </Link>
         
         {/* Navigation Links (Desktop) */}
