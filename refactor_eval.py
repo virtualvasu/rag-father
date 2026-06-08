@@ -1,170 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
+import re
+
+with open('frontend/src/pages/EvaluationInterface.jsx', 'r') as f:
+    content = f.read()
+
+# Replace imports
+import_str = """import React, { useState, useEffect, useRef } from 'react';
+import TerminalOutput from '../components/TerminalOutput';"""
+
+new_import_str = """import React, { useState, useEffect, useRef } from 'react';
 import Step1Parameters from './evaluation/Step1Parameters';
 import Step2RunEval from './evaluation/Step2RunEval';
-import Step3Results from './evaluation/Step3Results';
+import Step3Results from './evaluation/Step3Results';"""
 
-const EvaluationInterface = ({ toggleTheme, isDark }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [variants, setVariants] = useState([]);
-  const [selectedVariants, setSelectedVariants] = useState({});
-  const [questionIds, setQuestionIds] = useState("");
-  const [skipRagas, setSkipRagas] = useState(false);
-  const [status, setStatus] = useState("idle");
-  const [message, setMessage] = useState("");
-  const [results, setResults] = useState([]);
-  const [terminalLogs, setTerminalLogs] = useState([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [numQuestions, setNumQuestions] = useState(5);
+content = content.replace(import_str, new_import_str)
 
-  // Setup basic logging interval to pull status
-  useEffect(() => {
-    let interval;
-    if (status === "running") {
-      interval = setInterval(fetchStatus, 3000);
-    }
-    return () => clearInterval(interval);
-  }, [status]);
+# Add currentStep state
+# Search for const [variants, setVariants] = useState([]);
+state_search = "const [variants, setVariants] = useState([]);"
+state_replace = "const [currentStep, setCurrentStep] = useState(1);\n  const [variants, setVariants] = useState([]);"
+content = content.replace(state_search, state_replace)
 
-  // Stream logs via SSE
-  useEffect(() => {
-    let eventSource;
-    if (status === 'running' || isGenerating) {
-      setTerminalLogs([]); // Clear before starting
-      eventSource = new EventSource('/api/system/logs/stream');
-      
-      eventSource.onmessage = (event) => {
-        setTerminalLogs(prev => {
-          const newLogs = [...prev, event.data];
-          return newLogs.slice(-500); // Keep last 500 lines
-        });
-      };
-
-      eventSource.onerror = (error) => {
-        console.error("EventSource failed:", error);
-      };
-    } else {
-      if (eventSource) eventSource.close();
-    }
-    
-    return () => {
-      if (eventSource) eventSource.close();
-    };
-  }, [status, isGenerating]);
-
-  useEffect(() => {
-    fetchVariants();
-    fetchResults();
-    fetchStatus();
-  }, []);
-
-  const fetchVariants = async () => {
-    try {
-      const res = await fetch('/api/evaluation/variants');
-      if (res.ok) {
-        const data = await res.json();
-        setVariants(data.variants || []);
-        // select all by default
-        const initSelection = {};
-        (data.variants || []).forEach(v => initSelection[v] = true);
-        setSelectedVariants(initSelection);
-      }
-    } catch (e) {
-      console.error("Failed to fetch variants", e);
-    }
-  };
-
-  const fetchResults = async () => {
-    try {
-      const res = await fetch('/api/evaluation/results');
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.results || []);
-      }
-    } catch (e) {
-      console.error("Failed to fetch results", e);
-    }
-  };
-
-  const fetchStatus = async () => {
-    try {
-      const res = await fetch('/api/evaluation/status');
-      if (res.ok) {
-        const data = await res.json();
-        setStatus(data.status);
-        setMessage(data.message);
-        if (data.status === "completed" || data.status === "failed") {
-          fetchResults();
-          setTerminalLogs(prev => [...prev, data.message]);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch status", e);
-    }
-  };
-
-  const handleRun = async () => {
-    if (status === "running") return;
-    
-    setTerminalLogs(["Starting evaluation..."]);
-    setStatus("running");
-    
-    const activeVariants = Object.keys(selectedVariants).filter(v => selectedVariants[v]);
-    
-    const parsedQuestionIds = questionIds.split(",")
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-
-    const payload = {
-      variants: activeVariants,
-      question_ids: parsedQuestionIds.length > 0 ? parsedQuestionIds : null,
-      skip_ragas: skipRagas
-    };
-
-    try {
-      const res = await fetch('/api/evaluation/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        setTerminalLogs(prev => [...prev, "Sent request to backend... waiting for processing to begin in background."]);
-      } else {
-        const err = await res.json();
-        setTerminalLogs(prev => [...prev, `Error: ${err.detail || "Failed to start"}`]);
-        setStatus("failed");
-      }
-    } catch (e) {
-      setTerminalLogs(prev => [...prev, `Network error: ${e.message}`]);
-      setStatus("failed");
-    }
-  };
-
-  const handleGenerate = async () => {
-    if (isGenerating || status === "running") return;
-    
-    setTerminalLogs([`Generating synthetic dataset with ${numQuestions} questions... this may take a few minutes depending on your LLM.`]);
-    setIsGenerating(true);
-    
-    try {
-      const res = await fetch('/api/evaluation/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ num_questions: Number(numQuestions) })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTerminalLogs(prev => [...prev, `Success! Generated ${data.num_questions} questions.`]);
-      } else {
-        setTerminalLogs(prev => [...prev, `Error: ${data.detail || "Failed to generate"}`]);
-      }
-    } catch (e) {
-      setTerminalLogs(prev => [...prev, `Network error: ${e.message}`]);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  return (
+# Replace the layout
+# We want to replace the whole return block starting from <div className={`min-h-screen
+return_start = content.find("return (")
+# Find the matching closing bracket, or just replace till end.
+# Since it goes to end, we can replace from return_start to end
+if return_start != -1:
+    new_return = """return (
     <div className={`min-h-screen ${isDark ? 'dark bg-background text-on-surface' : 'bg-background text-on-surface'}`}>
       <div className="w-full px-4 md:px-12 py-8 mx-auto">
         <header className="mb-8 flex justify-between items-start">
@@ -275,3 +137,9 @@ const EvaluationInterface = ({ toggleTheme, isDark }) => {
 };
 
 export default EvaluationInterface;
+"""
+    content = content[:return_start] + new_return
+
+with open('frontend/src/pages/EvaluationInterface.jsx', 'w') as f:
+    f.write(content)
+

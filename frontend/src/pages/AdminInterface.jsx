@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import TerminalOutput from '../components/TerminalOutput';
+import Step1Upload from './admin/Step1Upload';
+import Step2SystemIdentity from './admin/Step2SystemIdentity';
+import Step3PipelineConfig from './admin/Step3PipelineConfig';
+import Step4RunPipeline from './admin/Step4RunPipeline';
+
 const AdminInterface = ({ toggleTheme, isDark }) => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [files, setFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -329,8 +334,8 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'dark bg-background text-on-surface' : 'bg-background text-on-surface'}`}>
-      <div className="max-w-4xl mx-auto p-8">
-        <header className="mb-12 flex justify-between items-start">
+      <div className="w-full px-4 md:px-12 py-8 mx-auto">
+        <header className="mb-8 flex justify-between items-start">
           <div>
             <h1 className="text-headline-xl font-headline-xl text-primary mb-2">System Admin</h1>
             <p className="text-body-lg text-on-surface-variant font-mono">DOCUMENT INGESTION & PIPELINE CONTROL</p>
@@ -344,365 +349,105 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
           </button>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Stepper Progress */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between">
+            {['Upload Documents', 'System Identity', 'Pipeline Config', 'Run Pipeline'].map((stepName, index) => {
+              const stepNumber = index + 1;
+              const isActive = currentStep === stepNumber;
+              const isPast = currentStep > stepNumber;
+              return (
+                <div key={stepNumber} className="flex flex-col items-center relative z-10 w-1/4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-sm border-2 transition-colors ${
+                    isActive ? 'bg-primary border-primary text-on-primary' : 
+                    isPast ? 'bg-primary-fixed border-primary-fixed text-on-primary-fixed' : 
+                    'bg-surface border-outline-variant text-on-surface-variant'
+                  }`}>
+                    {stepNumber}
+                  </div>
+                  <div className={`mt-2 text-xs font-mono text-center ${isActive || isPast ? 'text-primary' : 'text-on-surface-variant'}`}>
+                    {stepName}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="relative -mt-11 top-4 h-1 bg-outline-variant z-0 mx-10">
+            <div className="absolute top-0 left-0 h-full bg-primary transition-all duration-300" style={{ width: `${((currentStep - 1) / 3) * 100}%` }}></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8">
           
-          {/* Upload Section */}
-          <div className="border border-outline-variant rounded-none p-6 bg-surface-container">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">1. Document Upload</h2>
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-outline-variant p-8 text-center bg-surface hover:bg-surface-variant transition-colors cursor-pointer"
-                   onClick={() => fileInputRef.current?.click()}>
-                <input 
-                  type="file" 
-                  multiple 
-                  accept=".pdf" 
-                  className="hidden" 
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-                <p className="font-mono text-sm text-on-surface-variant">
-                  {files.length > 0 ? `${files.length} files selected` : "CLICK TO BROWSE PDFS"}
-                </p>
-              </div>
-              
-              {files.length > 0 && (
-                <ul className="font-mono text-xs text-on-surface-variant space-y-1">
-                  {files.map((f, i) => <li key={i}>&gt; {f.name}</li>)}
-                </ul>
-              )}
+          {currentStep === 1 && (
+            <Step1Upload 
+              files={files}
+              fileInputRef={fileInputRef}
+              handleFileChange={handleFileChange}
+              handleUpload={handleUpload}
+              uploadStatus={uploadStatus}
+              documents={documents}
+              setPreviewDoc={setPreviewDoc}
+              handleDeleteDoc={handleDeleteDoc}
+              agentPrompt={agentPrompt}
+              setAgentPrompt={setAgentPrompt}
+              agentStatus={agentStatus}
+              handleRunAgent={handleRunAgent}
+              handleResetAgent={handleResetAgent}
+              agentLogs={agentLogs}
+            />
+          )}
 
-              <button 
-                onClick={handleUpload}
-                disabled={files.length === 0 || uploadStatus === 'uploading'}
-                className="w-full py-3 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim disabled:opacity-50 transition-all"
-              >
-                {uploadStatus === 'uploading' ? 'UPLOADING...' : 'UPLOAD DOCUMENTS'}
-              </button>
-              
-              {uploadStatus === 'success' && <p className="text-primary font-mono text-xs">✓ Upload successful</p>}
-              {uploadStatus === 'error' && <p className="text-error font-mono text-xs">✗ Upload failed</p>}
-              
-              {documents.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-outline-variant">
-                  <h3 className="font-mono text-sm text-primary uppercase mb-3">Workspace Documents</h3>
-                  <div className="font-mono text-xs text-on-surface space-y-2 max-h-64 overflow-y-auto pr-2">
-                    {documents.map((doc, i) => (
-                      <div key={i} className="flex items-center justify-between p-2 border border-outline-variant bg-surface">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <svg className="w-4 h-4 text-secondary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <div className="truncate">
-                            <p className="truncate font-bold text-primary">{doc.name || doc}</p>
-                            {doc.size_kb !== undefined && (
-                              <p className="text-[10px] text-on-surface-variant">
-                                {doc.size_kb} KB • {new Date(doc.modified * 1000).toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                          <button onClick={() => setPreviewDoc(doc.name || doc)} className="px-2 py-1 bg-secondary text-background hover:bg-secondary-fixed-dim transition-colors uppercase text-[10px] font-bold">View</button>
-                          <button onClick={() => handleDeleteDoc(doc.name || doc)} className="px-2 py-1 bg-error text-on-error hover:opacity-80 transition-colors uppercase text-[10px] font-bold">Delete</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {currentStep === 2 && (
+            <Step2SystemIdentity 
+              promptUseCase={promptUseCase}
+              setPromptUseCase={setPromptUseCase}
+              isGeneratingPrompt={isGeneratingPrompt}
+              handleGeneratePrompt={handleGeneratePrompt}
+              systemPrompt={systemPrompt}
+              setSystemPrompt={setSystemPrompt}
+              handleSavePrompt={handleSavePrompt}
+            />
+          )}
 
-          {/* Agentic Ingestion Section */}
-          <div className="border border-outline-variant rounded-none p-6 bg-surface-container">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-headline-md font-headline-md text-secondary">OR: Agentic Ingestion</h2>
-              {agentStatus === 'running' && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span></span>}
-            </div>
-            
-            <div className="space-y-4">
-              <p className="font-mono text-xs text-on-surface-variant">
-                Command the AI Agent to search the web, find relevant PDFs, and download them into the system automatically.
-              </p>
-              
-              <textarea
-                value={agentPrompt}
-                onChange={(e) => setAgentPrompt(e.target.value)}
-                placeholder="e.g. Find and download the latest Tesla 10-K filings from SEC.gov"
-                className="w-full h-24 bg-surface border border-outline-variant p-3 text-sm font-mono text-on-surface focus:outline-none focus:border-primary resize-none placeholder-on-surface-variant"
-                disabled={agentStatus === 'running'}
-              />
-              
-              <div className="flex gap-2">
-                <button 
-                  onClick={handleRunAgent}
-                  disabled={!agentPrompt.trim() || agentStatus === 'running'}
-                  className="flex-1 py-3 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-opacity-90 disabled:opacity-50 transition-all"
-                >
-                  {agentStatus === 'running' ? 'AGENT RUNNING...' : 'COMMAND AGENT'}
-                </button>
-                {agentStatus === 'completed' || agentStatus === 'failed' ? (
-                  <button 
-                    onClick={handleResetAgent}
-                    className="px-4 py-3 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary transition-all"
-                  >
-                    RESET
-                  </button>
-                ) : null}
-              </div>
+          {currentStep === 3 && (
+            <Step3PipelineConfig 
+              pipelineConfig={pipelineConfig}
+              handleConfigChange={handleConfigChange}
+            />
+          )}
 
-              {agentLogs.length > 0 && (
-                <div className="mt-4">
-                  <TerminalOutput logs={agentLogs} height="max-h-96" />
-                </div>
-              )}
-            </div>
-          </div>
+          {currentStep === 4 && (
+            <Step4RunPipeline 
+              pipelineStatus={pipelineStatus}
+              pipelineMessage={pipelineMessage}
+              pipelineResult={pipelineResult}
+              pipelineLogs={pipelineLogs}
+              startPipeline={startPipeline}
+              handleReset={handleReset}
+              pipelineConfig={pipelineConfig}
+              systemPrompt={systemPrompt}
+            />
+          )}
 
-          {/* System Identity Section */}
-          <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">2. System Identity (Prompt)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <p className="text-sm font-mono text-on-surface-variant">
-                  Define the core persona and instructions for the RAG assistant. You can manually edit the prompt or use the AI to generate a highly robust prompt based on your use case.
-                </p>
-                <div>
-                  <label className="block text-xs font-mono text-on-surface-variant mb-1">Auto-Generate from Use Case</label>
-                  <input 
-                    type="text" 
-                    value={promptUseCase}
-                    onChange={(e) => setPromptUseCase(e.target.value)}
-                    placeholder="e.g. Medical RAG for clinical guidelines" 
-                    className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary mb-2" 
-                    disabled={isGeneratingPrompt}
-                  />
-                  <button 
-                    onClick={handleGeneratePrompt}
-                    disabled={!promptUseCase.trim() || isGeneratingPrompt}
-                    className="w-full py-2 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-opacity-90 disabled:opacity-50 transition-all flex justify-center items-center gap-2"
-                  >
-                    {isGeneratingPrompt && <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>}
-                    {isGeneratingPrompt ? 'GENERATING MAGIC PROMPT...' : 'GENERATE MAGIC PROMPT'}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4 flex flex-col">
-                <label className="block text-xs font-mono text-on-surface-variant mb-1">System Prompt</label>
-                <textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  className="w-full flex-grow min-h-[150px] bg-surface border border-outline-variant p-3 text-sm font-mono text-on-surface focus:outline-none focus:border-primary resize-y"
-                  disabled={isGeneratingPrompt}
-                />
-                <button 
-                  onClick={handleSavePrompt}
-                  disabled={isGeneratingPrompt}
-                  className="w-full py-2 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary transition-all"
-                >
-                  SAVE PROMPT
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Configuration Section */}
-          <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">3. Pipeline Configuration</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h3 className="font-mono text-sm text-primary uppercase">Provider Settings</h3>
-                <div>
-                  <label className="block text-xs font-mono text-on-surface-variant mb-1">Enrichment Provider</label>
-                  <select name="enrichment_provider" value={pipelineConfig.enrichment_provider} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary">
-                    <option value="ollama">Ollama (Local - Free)</option>
-                    <option value="claude">Claude (Cloud - Paid)</option>
-                    <option value="custom">Custom (OpenAI Compatible)</option>
-                    <option value="groq">Groq (Ultra-Fast Cloud)</option>
-                  </select>
-                </div>
-                {pipelineConfig.enrichment_provider === 'claude' && (
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Anthropic API Key</label>
-                    <input type="password" name="anthropic_api_key" value={pipelineConfig.anthropic_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="sk-ant-..." />
-                  </div>
-                )}
-                <div className="pt-2">
-                  <label className="block text-xs font-mono text-on-surface-variant mb-1">Generation Provider (For Querying)</label>
-                  <select name="generation_provider" value={pipelineConfig.generation_provider} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary">
-                    <option value="ollama">Ollama (Local - Free)</option>
-                    <option value="claude">Claude (Cloud - Paid)</option>
-                    <option value="custom">Custom (OpenAI Compatible)</option>
-                    <option value="groq">Groq (Ultra-Fast Cloud)</option>
-                  </select>
-                </div>
-                {pipelineConfig.generation_provider === 'claude' && pipelineConfig.enrichment_provider !== 'claude' && (
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Anthropic API Key</label>
-                    <input type="password" name="anthropic_api_key" value={pipelineConfig.anthropic_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="sk-ant-..." />
-                  </div>
-                )}
-                {(pipelineConfig.enrichment_provider === 'custom' || pipelineConfig.generation_provider === 'custom') && (
-                  <div className="space-y-2 p-3 border border-outline-variant bg-surface-variant/30">
-                    <div>
-                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Custom Base URL</label>
-                      <input type="text" name="custom_llm_base_url" value={pipelineConfig.custom_llm_base_url} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="https://api.groq.com/openai/v1" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Custom Model Name</label>
-                      <input type="text" name="custom_llm_model" value={pipelineConfig.custom_llm_model} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="llama3-70b-8192" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Custom API Key</label>
-                      <input type="password" name="custom_llm_api_key" value={pipelineConfig.custom_llm_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="gsk_..." />
-                    </div>
-                  </div>
-                )}
-                {(pipelineConfig.enrichment_provider === 'groq' || pipelineConfig.generation_provider === 'groq') && (
-                  <div className="space-y-2 p-3 border border-outline-variant bg-surface-variant/30">
-                    <div>
-                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Groq API Key</label>
-                      <input type="password" name="custom_llm_api_key" value={pipelineConfig.custom_llm_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="gsk_..." />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Groq Model Name</label>
-                      <input type="text" name="custom_llm_model" value={pipelineConfig.custom_llm_model} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="llama3-70b-8192" />
-                    </div>
-                  </div>
-                )}
-                {pipelineConfig.enrichment_provider === 'ollama' && pipelineConfig.generation_provider === 'ollama' && (
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Ollama Model</label>
-                    <input type="text" name="ollama_model" value={pipelineConfig.ollama_model} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="qwen2.5:7b" />
-                  </div>
-                )}
-                <div className="pt-2">
-                  <label className="block text-xs font-mono text-on-surface-variant mb-1">Embedding Provider</label>
-                  <select name="embedding_provider" value={pipelineConfig.embedding_provider} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary">
-                    <option value="local">Local (BGE-Large-v1.5)</option>
-                    <option value="openai">OpenAI (text-embedding-3-large)</option>
-                  </select>
-                </div>
-                {pipelineConfig.embedding_provider === 'openai' && (
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">OpenAI API Key</label>
-                    <input type="password" name="openai_api_key" value={pipelineConfig.openai_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="sk-proj-..." />
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="font-mono text-sm text-primary uppercase">Advanced Tuning</h3>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="wipe_data_on_pipeline_run" name="wipe_data_on_pipeline_run" checked={pipelineConfig.wipe_data_on_pipeline_run} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-                  <label htmlFor="wipe_data_on_pipeline_run" className="text-sm font-mono text-on-surface cursor-pointer">Wipe Data on Run (Uncheck for Append Mode)</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="skip_enrichment" name="skip_enrichment" checked={pipelineConfig.skip_enrichment} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-                  <label htmlFor="skip_enrichment" className="text-sm font-mono text-on-surface cursor-pointer">Skip Enrichment (Faster pipeline, less contextual metadata)</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="use_knowledge_graph" name="use_knowledge_graph" checked={pipelineConfig.use_knowledge_graph} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-                  <label htmlFor="use_knowledge_graph" className="text-sm font-mono text-on-surface cursor-pointer">Use Knowledge Graph (Neo4j extraction & multi-hop retrieval)</label>
-                </div>
-                <div className="flex items-center gap-2 mb-4">
-                  <input type="checkbox" id="use_cross_encoder_reranker" name="use_cross_encoder_reranker" checked={pipelineConfig.use_cross_encoder_reranker} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-                  <label htmlFor="use_cross_encoder_reranker" className="text-sm font-mono text-on-surface cursor-pointer">Use Cross-Encoder Reranker (Slower but more precise)</label>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Child Chunk Size</label>
-                    <input type="number" name="child_chunk_size" value={pipelineConfig.child_chunk_size} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Parent Chunk Size</label>
-                    <input type="number" name="parent_chunk_size" value={pipelineConfig.parent_chunk_size} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Top-K Retrieval</label>
-                    <input type="number" name="top_k_retrieval" value={pipelineConfig.top_k_retrieval} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Top-K Rerank</label>
-                    <input type="number" name="top_k_rerank" value={pipelineConfig.top_k_rerank} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-mono text-on-surface-variant mb-1">Graph Search Depth (Hops)</label>
-                    <input type="number" name="graph_search_hops" min="1" max="3" value={pipelineConfig.graph_search_hops} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pipeline Section */}
-          <div className="border border-outline-variant rounded-none p-6 bg-surface-container md:col-span-2">
-            <h2 className="text-headline-md font-headline-md mb-4 text-secondary">4. Processing Pipeline</h2>
-            <div className="space-y-6">
-              <p className="text-body-sm text-on-surface-variant">
-                Run the ingestion and indexing pipeline. This will chunk the uploaded documents, enrich them, and populate the Qdrant and Neo4j databases.
-              </p>
-              
-              <div className="flex gap-4">
-                <button 
-                  onClick={startPipeline}
-                  disabled={pipelineStatus === 'running'}
-                  className="flex-1 py-3 bg-secondary text-on-secondary font-mono text-sm uppercase hover:bg-secondary-fixed-dim disabled:opacity-50 transition-all flex justify-center items-center gap-2"
-                >
-                  {pipelineStatus === 'running' && (
-                    <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></span>
-                  )}
-                  {pipelineStatus === 'running' ? 'PIPELINE RUNNING' : 'START PIPELINE'}
-                </button>
-
-                <button 
-                  onClick={handleReset}
-                  disabled={pipelineStatus === 'running'}
-                  className="flex-1 py-3 bg-error text-on-error font-mono text-sm uppercase hover:bg-[#ff5449] disabled:opacity-50 transition-all"
-                >
-                  RESET SYSTEM
-                </button>
-              </div>
-
-              {/* Status Display */}
-              <div className="bg-[#0c1324] dark:bg-[#060908] border border-outline-variant p-4">
-                <div className="font-mono text-xs text-white space-y-2">
-                  <p>&gt; SYSTEM STATUS: {pipelineStatus.toUpperCase()}</p>
-                  {pipelineMessage && <p>&gt; {pipelineMessage}</p>}
-                  
-                  {pipelineResult && (
-                    <div className="mt-4 pt-4 border-t border-outline-variant text-tertiary">
-                      <p className="text-secondary mb-2">INDEXING RESULTS:</p>
-                      <ul className="space-y-1">
-                        <li>Qdrant Vectors: {pipelineResult.indexing.qdrant_points}</li>
-                        <li>BM25 Chunks: {pipelineResult.indexing.bm25_chunks}</li>
-                        <li>Neo4j Nodes: {pipelineResult.indexing.neo4j_nodes}</li>
-                        <li>Neo4j Edges: {pipelineResult.indexing.neo4j_edges}</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Streaming Logs */}
-              {(pipelineLogs.length > 0 || pipelineStatus === 'running') && (
-                <div className="mt-4">
-                  <TerminalOutput logs={pipelineLogs} isRunning={pipelineStatus === 'running'} height="h-64" />
-                </div>
-              )}
-
-              {pipelineStatus === 'completed' && (
-                <div className="mt-4 pt-4 border-t border-outline-variant flex justify-end">
-                  <button 
-                    onClick={() => window.location.href = '/'}
-                    className="py-3 px-8 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim transition-all shadow-md flex items-center gap-2"
-                  >
-                    LAUNCH CHAT INTERFACE
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                  </button>
-                </div>
-              )}
-            </div>
+          {/* Navigation Controls */}
+          <div className="flex justify-between mt-8 border-t border-outline-variant pt-6">
+            <button
+              onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+              disabled={currentStep === 1 || pipelineStatus === 'running'}
+              className="py-3 px-8 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              BACK
+            </button>
+            <button
+              onClick={() => setCurrentStep(prev => Math.min(4, prev + 1))}
+              disabled={currentStep === 4 || pipelineStatus === 'running'}
+              className="py-3 px-8 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim disabled:opacity-50 transition-all shadow-md flex items-center gap-2"
+            >
+              NEXT STEP
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
           </div>
 
         </div>
