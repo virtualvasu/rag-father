@@ -55,7 +55,16 @@ graph TD
     * **Knowledge Graph**: Maps chunk relationships, source documents, and metadata into Neo4j nodes and edges for structural traversal.
     * **Sparse Index**: Builds a BM25 index for exact keyword matching.
 
-## 4. Architecture and Containers
+## 4. Why Not LangChain?
+
+While frameworks like LangChain, LlamaIndex, or LangGraph provide excellent abstractions for standard RAG pipelines, Rag-Father was deliberately built using custom python implementations (FastAPI, LiteLLM, raw database clients). This architectural decision was made for the following reasons:
+
+1. **Ablation Testing Control**: The Evaluation Portal allows users to dynamically toggle pipeline components (e.g., Naive vs. Advanced RAG). Managing dynamic routing and modular toggles is significantly easier without fighting static chain abstractions (like LCEL).
+2. **Evaluation Data Extraction**: Frameworks like RAGAS require exact references to intermediate states (the specific context chunks passed to the LLM). Custom logic allows us to easily capture these intermediate states without unpacking complex framework-specific object wrappers.
+3. **Transparent Prompts**: Core logic like the GraphRAG extraction relies on our own specialized, heavily-tuned system prompts. By avoiding "black box" abstractions like `LLMGraphTransformer`, we maintain absolute control over the schema and quality of our Graph Database.
+4. **Performance & Debugging**: Removing heavy abstraction layers results in a leaner codebase that is faster to execute and significantly easier to debug when pipeline traces fail.
+
+## 5. Architecture and Containers
 
 The system is deployed via Docker Compose and consists of four isolated services communicating over a shared network.
 
@@ -66,7 +75,7 @@ The system is deployed via Docker Compose and consists of four isolated services
 | **qdrant** | Qdrant | `6333` | High-performance vector database storing chunk embeddings. |
 | **neo4j** | Neo4j | `7474` (HTTP)<br>`7687` (Bolt) | Graph database storing structural relationships between documents and clauses. |
 
-## 5. Setup and Execution
+## 6. Setup and Execution
 
 Follow these steps to deploy and use the system:
 
