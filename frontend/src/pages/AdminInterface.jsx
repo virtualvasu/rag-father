@@ -185,12 +185,24 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
 
   const startPipeline = async () => {
     try {
+      let payload = { ...pipelineConfig };
+      
+      // Auto-configure Groq mapping
+      if (payload.enrichment_provider === 'groq') {
+        payload.enrichment_provider = 'custom';
+        payload.custom_llm_base_url = 'https://api.groq.com/openai/v1';
+      }
+      if (payload.generation_provider === 'groq') {
+        payload.generation_provider = 'custom';
+        payload.custom_llm_base_url = 'https://api.groq.com/openai/v1';
+      }
+
       const response = await fetch('/api/pipeline/run', { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(pipelineConfig)
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         setPipelineStatus('running');
@@ -506,6 +518,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
                     <option value="ollama">Ollama (Local - Free)</option>
                     <option value="claude">Claude (Cloud - Paid)</option>
                     <option value="custom">Custom (OpenAI Compatible)</option>
+                    <option value="groq">Groq (Ultra-Fast Cloud)</option>
                   </select>
                 </div>
                 {pipelineConfig.enrichment_provider === 'claude' && (
@@ -520,6 +533,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
                     <option value="ollama">Ollama (Local - Free)</option>
                     <option value="claude">Claude (Cloud - Paid)</option>
                     <option value="custom">Custom (OpenAI Compatible)</option>
+                    <option value="groq">Groq (Ultra-Fast Cloud)</option>
                   </select>
                 </div>
                 {pipelineConfig.generation_provider === 'claude' && pipelineConfig.enrichment_provider !== 'claude' && (
@@ -541,6 +555,18 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
                     <div>
                       <label className="block text-xs font-mono text-on-surface-variant mb-1">Custom API Key</label>
                       <input type="password" name="custom_llm_api_key" value={pipelineConfig.custom_llm_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="gsk_..." />
+                    </div>
+                  </div>
+                )}
+                {(pipelineConfig.enrichment_provider === 'groq' || pipelineConfig.generation_provider === 'groq') && (
+                  <div className="space-y-2 p-3 border border-outline-variant bg-surface-variant/30">
+                    <div>
+                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Groq API Key</label>
+                      <input type="password" name="custom_llm_api_key" value={pipelineConfig.custom_llm_api_key} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="gsk_..." />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono text-on-surface-variant mb-1">Groq Model Name</label>
+                      <input type="text" name="custom_llm_model" value={pipelineConfig.custom_llm_model} onChange={handleConfigChange} className="w-full bg-surface border border-outline-variant p-2 text-sm text-on-surface focus:outline-none focus:border-primary" placeholder="llama3-70b-8192" />
                     </div>
                   </div>
                 )}
