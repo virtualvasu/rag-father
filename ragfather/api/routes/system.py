@@ -72,3 +72,34 @@ def generate_system_prompt(request: PromptGenerationRequest):
         return PromptGenerationResponse(system_prompt=new_system_prompt.strip(), message="Successfully generated and saved new system prompt.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi.responses import StreamingResponse
+from fastapi import Request
+import asyncio
+from ragfather.utils.sse_logger import log_broadcaster
+
+@router.get("/logs/stream")
+async def stream_logs(request: Request):
+    """Stream application logs via Server-Sent Events."""
+    async def event_generator():
+        q = asyncio.Queue()
+        loop = asyncio.get_running_loop()
+        queue_item = (q, loop)
+        log_broadcaster.queues.add(queue_item)
+        try:
+            # Yield history first
+            for msg in log_broadcaster.history:
+                yield f"data: {msg}\n\n"
+            
+            # Wait for new logs
+            while True:
+                if await request.is_disconnected():
+                    break
+                msg = await q.get()
+                yield f"data: {msg}\n\n"
+        except asyncio.CancelledError:
+            pass
+        finally:
+            log_broadcaster.queues.discard(queue_item)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

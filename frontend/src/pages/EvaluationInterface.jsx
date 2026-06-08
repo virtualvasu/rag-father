@@ -22,6 +22,32 @@ const EvaluationInterface = ({ toggleTheme, isDark }) => {
     return () => clearInterval(interval);
   }, [status]);
 
+  // Stream logs via SSE
+  useEffect(() => {
+    let eventSource;
+    if (status === 'running' || isGenerating) {
+      setTerminalLogs([]); // Clear before starting
+      eventSource = new EventSource('/api/system/logs/stream');
+      
+      eventSource.onmessage = (event) => {
+        setTerminalLogs(prev => {
+          const newLogs = [...prev, event.data];
+          return newLogs.slice(-500); // Keep last 500 lines
+        });
+      };
+
+      eventSource.onerror = (error) => {
+        console.error("EventSource failed:", error);
+      };
+    } else {
+      if (eventSource) eventSource.close();
+    }
+    
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [status, isGenerating]);
+
   useEffect(() => {
     fetchVariants();
     fetchResults();

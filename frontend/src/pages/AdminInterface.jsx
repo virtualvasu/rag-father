@@ -7,6 +7,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
   const [pipelineStatus, setPipelineStatus] = useState('idle'); // idle, running, completed, failed
   const [pipelineMessage, setPipelineMessage] = useState('');
   const [pipelineResult, setPipelineResult] = useState(null);
+  const [pipelineLogs, setPipelineLogs] = useState([]);
   
   // Agent states
   const [agentPrompt, setAgentPrompt] = useState("");
@@ -96,6 +97,36 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
     }
     return () => clearInterval(interval);
   }, [pipelineStatus]);
+
+  // Stream pipeline logs via SSE
+  useEffect(() => {
+    let eventSource;
+    if (pipelineStatus === 'running') {
+      setPipelineLogs([]); // Clear before starting
+      eventSource = new EventSource('/api/system/logs/stream');
+      
+      eventSource.onmessage = (event) => {
+        setPipelineLogs(prev => {
+          const newLogs = [...prev, event.data];
+          return newLogs.slice(-500); // Keep last 500 lines
+        });
+      };
+
+      eventSource.onerror = (error) => {
+        console.error("EventSource failed:", error);
+        if (eventSource.readyState === EventSource.CLOSED) {
+          // Connection closed by server
+        }
+      };
+    } else {
+      if (eventSource) eventSource.close();
+    }
+    
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [pipelineStatus]);
+
 
   // Poll agent status
   useEffect(() => {
@@ -607,8 +638,8 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
                 </button>
               </div>
 
-              {/* Status Terminal */}
-              <div className="bg-[#0c1324] dark:bg-[#060908] border border-outline-variant p-4 h-48 overflow-y-auto">
+              {/* Status Display */}
+              <div className="bg-[#0c1324] dark:bg-[#060908] border border-outline-variant p-4">
                 <div className="font-mono text-xs text-white space-y-2">
                   <p>&gt; SYSTEM STATUS: {pipelineStatus.toUpperCase()}</p>
                   {pipelineMessage && <p>&gt; {pipelineMessage}</p>}
@@ -626,6 +657,13 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
                   )}
                 </div>
               </div>
+
+              {/* Streaming Logs */}
+              {(pipelineLogs.length > 0 || pipelineStatus === 'running') && (
+                <div className="mt-4">
+                  <TerminalOutput logs={pipelineLogs} isRunning={pipelineStatus === 'running'} height="h-64" />
+                </div>
+              )}
 
               {pipelineStatus === 'completed' && (
                 <div className="mt-4 pt-4 border-t border-outline-variant flex justify-end">

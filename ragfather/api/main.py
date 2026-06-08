@@ -13,6 +13,11 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 )
 
+from ragfather.utils.sse_logger import SSELogHandler
+sse_handler = SSELogHandler()
+sse_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s"))
+logging.getLogger().addHandler(sse_handler)
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
