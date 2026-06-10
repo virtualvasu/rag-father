@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { 
   Moon, Sun, ArrowRight, Paperclip, Lock, 
   Cpu, Search, Network, FileText, Scale,
-  Copy, Flag, BookOpen, RotateCw, Layers, Server
+  Copy, Flag, BookOpen, RotateCw, Layers, Server,
+  ChevronDown, ChevronUp, ExternalLink
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 
@@ -13,6 +14,10 @@ export default function ChatInterface({ toggleTheme, isDark }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [useCrag, setUseCrag] = useState(true);
+  const [useGraph, setUseGraph] = useState(true);
+  const [useReranker, setUseReranker] = useState(true);
+  const [useCitations, setUseCitations] = useState(true);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom of chat
@@ -48,8 +53,10 @@ export default function ChatInterface({ toggleTheme, isDark }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: userQuery,
-          use_crag: true,
-          use_graph: true
+          use_crag: useCrag,
+          use_graph: useGraph,
+          use_reranker: useReranker,
+          use_citations: useCitations
         })
       });
 
@@ -188,7 +195,25 @@ export default function ChatInterface({ toggleTheme, isDark }) {
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
-            <div className="mt-4 flex justify-between items-center max-w-4xl mx-auto">
+            <div className="mt-4 flex flex-wrap gap-4 items-center max-w-4xl mx-auto border-b border-outline-variant/30 pb-3 mb-3">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" checked={useCrag} onChange={e => setUseCrag(e.target.checked)} className="accent-primary w-3 h-3" disabled={isLoading} />
+                <span className="font-mono text-[10px] text-on-surface-variant group-hover:text-primary transition-colors uppercase tracking-widest">CRAG Check</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" checked={useGraph} onChange={e => setUseGraph(e.target.checked)} className="accent-primary w-3 h-3" disabled={isLoading} />
+                <span className="font-mono text-[10px] text-on-surface-variant group-hover:text-primary transition-colors uppercase tracking-widest">Knowledge Graph</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" checked={useReranker} onChange={e => setUseReranker(e.target.checked)} className="accent-primary w-3 h-3" disabled={isLoading} />
+                <span className="font-mono text-[10px] text-on-surface-variant group-hover:text-primary transition-colors uppercase tracking-widest">Cross-Encoder</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" checked={useCitations} onChange={e => setUseCitations(e.target.checked)} className="accent-primary w-3 h-3" disabled={isLoading} />
+                <span className="font-mono text-[10px] text-on-surface-variant group-hover:text-primary transition-colors uppercase tracking-widest">Source Citations</span>
+              </label>
+            </div>
+            <div className="flex justify-between items-center max-w-4xl mx-auto">
               <span className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">Output requires verification.</span>
               <span className="font-mono text-[10px] uppercase tracking-widest text-secondary flex items-center gap-2">
                 <Lock className="w-3 h-3" />
@@ -326,6 +351,22 @@ export default function ChatInterface({ toggleTheme, isDark }) {
 
 function DocumentBlock({ msg }) {
   const isUser = msg.role === 'user';
+  const [expandedCitation, setExpandedCitation] = useState(null);
+  const [highlightedCitation, setHighlightedCitation] = useState(null);
+  const citationRefs = useRef({});
+
+  // Click handler for [Source N] inline links
+  const handleSourceClick = useCallback((sourceIndex) => {
+    setExpandedCitation(sourceIndex);
+    setHighlightedCitation(sourceIndex);
+    // Scroll citation card into view
+    const el = citationRefs.current[sourceIndex];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    // Remove highlight after 2s
+    setTimeout(() => setHighlightedCitation(null), 2000);
+  }, []);
 
   if (isUser) {
     return (
@@ -342,6 +383,34 @@ function DocumentBlock({ msg }) {
       </motion.div>
     );
   }
+
+  // Post-process answer text: convert [Source N] to clickable spans
+  const renderAnswerWithClickableSources = (content) => {
+    if (!content) return null;
+    // Replace [Source N] or [Source N][Source M] patterns with placeholders
+    // then render via custom component
+    const processedContent = content.replace(
+      /\[Source\s+(\d+)\]/gi,
+      (match, n) => `[Source ${n}]`
+    );
+
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Intercept text nodes to convert [Source N] to clickable elements
+          p: ({ children }) => (
+            <p>{renderWithSourceLinks(children, handleSourceClick)}</p>
+          ),
+          li: ({ children }) => (
+            <li>{renderWithSourceLinks(children, handleSourceClick)}</li>
+          ),
+        }}
+      >
+        {processedContent}
+      </ReactMarkdown>
+    );
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start w-full mt-8">
@@ -363,34 +432,84 @@ function DocumentBlock({ msg }) {
             {msg.isError ? (
               <p>{msg.content}</p>
             ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {msg.content}
-              </ReactMarkdown>
+              renderAnswerWithClickableSources(msg.content)
             )}
           </div>
           
-          {/* Citations Showcase */}
+          {/* Citations Reference Index */}
           {!msg.isError && msg.citations && msg.citations.length > 0 && (
             <div className="mt-8 pt-8 border-t border-outline-variant/30">
               <div className="font-mono text-xs text-on-surface uppercase tracking-[0.2em] flex items-center gap-3 mb-6">
                 <BookOpen className="w-4 h-4" /> Reference Index
               </div>
               <div className="grid grid-cols-1 gap-4">
-                {msg.citations.map((cit, idx) => (
-                  <div key={idx} className="bg-surface border-l-2 border-primary pl-4 py-2 flex flex-col gap-2 group">
-                    <div className="flex justify-between items-start gap-4">
-                      <span className="font-mono text-sm text-on-surface font-bold">
-                        {cit.act}
-                      </span>
-                      <span className="bg-on-surface text-surface font-mono text-[10px] uppercase px-2 py-0.5 whitespace-nowrap">
-                        {cit.section_type} {cit.section_number}
-                      </span>
-                    </div>
-                    <p className="font-body-sm text-on-surface-variant line-clamp-2 mt-1 italic" title={cit.section_title || cit.text_excerpt}>
-                      "{cit.section_title || cit.text_excerpt?.substring(0, 200) + '...'}"
-                    </p>
-                  </div>
-                ))}
+                {msg.citations.map((cit, idx) => {
+                  const cardKey = cit.source_index ?? idx;
+                  const isExpanded = expandedCitation === cardKey;
+                  const isHighlighted = highlightedCitation === cardKey;
+                  return (
+                    <motion.div
+                      key={idx}
+                      ref={el => { citationRefs.current[cardKey] = el; }}
+                      animate={isHighlighted ? { borderColor: ['var(--color-primary)', 'var(--color-outline-variant)'] } : {}}
+                      transition={{ duration: 1.5 }}
+                      className={`bg-surface border-l-2 pl-4 py-3 flex flex-col gap-2 group transition-colors cursor-pointer
+                        ${isHighlighted ? 'border-primary shadow-sm' : 'border-primary/40 hover:border-primary'}`}
+                      onClick={() => setExpandedCitation(isExpanded ? null : cardKey)}
+                    >
+                      {/* Citation Header */}
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {cit.source_index != null && (
+                            <span className="font-mono text-[10px] bg-primary text-surface px-1.5 py-0.5 flex-shrink-0">
+                              S{cit.source_index}
+                            </span>
+                          )}
+                          <span className="font-mono text-sm text-on-surface font-bold truncate">
+                            {cit.act || 'Unknown Source'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {cit.section_number && (
+                            <span className="bg-on-surface text-surface font-mono text-[10px] uppercase px-2 py-0.5 whitespace-nowrap">
+                              {cit.section_type} {cit.section_number}
+                            </span>
+                          )}
+                          <button className="text-on-surface-variant hover:text-primary transition-colors">
+                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Section Title */}
+                      {cit.section_title && (
+                        <p className="font-body-sm text-on-surface-variant italic text-sm" title={cit.section_title}>
+                          {cit.section_title}
+                        </p>
+                      )}
+
+                      {/* Expandable Text Excerpt */}
+                      <AnimatePresence>
+                        {isExpanded && cit.text_excerpt && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="mt-2 pt-2 border-t border-outline-variant/30">
+                              <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-widest block mb-1">Source Excerpt</span>
+                              <p className="font-body-sm text-on-surface-variant text-sm leading-relaxed">
+                                "{cit.text_excerpt}{cit.text_excerpt.length >= 300 ? '…' : ''}"
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -410,4 +529,53 @@ function DocumentBlock({ msg }) {
       </div>
     </motion.div>
   );
+}
+
+/**
+ * Recursively walk React children and replace [Source N] text nodes
+ * with clickable <button> elements.
+ */
+function renderWithSourceLinks(children, onSourceClick) {
+  if (!children) return children;
+
+  const sourceRegex = /\[Source\s+(\d+)\]/gi;
+
+  const processNode = (node, keyPrefix) => {
+    if (typeof node === 'string') {
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      sourceRegex.lastIndex = 0; // reset regex state
+      while ((match = sourceRegex.exec(node)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(node.slice(lastIndex, match.index));
+        }
+        const n = parseInt(match[1], 10);
+        parts.push(
+          <button
+            key={`${keyPrefix}-src-${n}-${match.index}`}
+            onClick={(e) => { e.stopPropagation(); onSourceClick(n); }}
+            className="inline-flex items-center font-mono text-[10px] bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 mx-0.5 hover:bg-primary hover:text-surface transition-colors cursor-pointer"
+            title={`Jump to Source ${n}`}
+          >
+            S{n}
+          </button>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < node.length) {
+        parts.push(node.slice(lastIndex));
+      }
+      return parts.length === 0 ? node : parts;
+    }
+    if (Array.isArray(node)) {
+      return node.map((child, i) => processNode(child, `${keyPrefix}-${i}`));
+    }
+    return node;
+  };
+
+  if (Array.isArray(children)) {
+    return children.map((child, i) => processNode(child, `rsl-${i}`));
+  }
+  return processNode(children, 'rsl');
 }

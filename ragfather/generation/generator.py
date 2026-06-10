@@ -14,6 +14,7 @@ from typing import Optional
 from ragfather.config import settings
 from ragfather.generation.prompts import (
     GENERATION_PROMPT,
+    GENERATION_PROMPT_NO_CITATIONS,
     CONTEXT_BLOCK_TEMPLATE,
     CRAG_CHECK_PROMPT,
     QUERY_REFINEMENT_PROMPT,
@@ -26,12 +27,13 @@ logger = logging.getLogger(__name__)
 # ── Context formatting ─────────────────────────────────────────────────────────
 
 def format_context_blocks(chunks: list[dict]) -> str:
-    """Format retrieved chunks into numbered context blocks for the LLM prompt."""
+    """Format retrieved chunks into numbered [Source N] context blocks for the LLM prompt."""
     blocks = []
-    for chunk in chunks:
+    for idx, chunk in enumerate(chunks, start=1):
         section_title = chunk.get("section_title", "")
         section_title_part = f" — {section_title}" if section_title else ""
         block = CONTEXT_BLOCK_TEMPLATE.format(
+            index=idx,
             act=chunk.get("act", "Unknown Act"),
             section_number=chunk.get("section_number", ""),
             section_title_part=section_title_part,
@@ -127,27 +129,66 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
     """
     Parse inline citations from generated answer text.
 
-    Matches patterns like:
+    PRIMARY pattern — numeric source references (new format):
+      [Source 1], [Source 3], etc.
+      Each is mapped back to the corresponding context chunk by 1-based index.
+
+    FALLBACK pattern — legacy act/section format:
       [Companies Act 2013, Section 42]
       [SEBI ICDR Regulations 2018, Regulation 26]
-      [DPIIT Guidelines, Section 5]
     """
-    citation_pattern = r'\[([^\]]+),\s*(Section|Rule|Regulation|Clause)\s+([^\]]+)\]'
-    matches = re.findall(citation_pattern, answer)
-
     citations = []
-    seen = set()
+    seen_indices: set[int] = set()
+    seen_keys: set[str] = set()
 
-    for act, sec_type, sec_num in matches:
-        key = f"{act.strip()}_{sec_num.strip()}"
-        if key in seen:
+    # ── Primary: [Source N] references ────────────────────────────────────────
+    source_pattern = r'\[Source\s+(\d+)\]'
+    for match in re.finditer(source_pattern, answer, re.IGNORECASE):
+        n = int(match.group(1))
+        if n in seen_indices:
             continue
-        seen.add(key)
+        seen_indices.add(n)
 
-        citation_obj = {
+        chunk_index = n - 1  # convert 1-based to 0-based
+        if 0 <= chunk_index < len(context_chunks):
+            chunk = context_chunks[chunk_index]
+            citations.append({
+                "source_index": n,
+                "act": chunk.get("act", ""),
+                "section_type": "Section",
+                "section_number": chunk.get("section_number", ""),
+                "section_title": chunk.get("section_title"),
+                "chunk_id": chunk.get("chunk_id"),
+                "text_excerpt": chunk.get("text", "")[:300],
+            })
+        else:
+            # Source index out of range — record it without chunk data
+            citations.append({
+                "source_index": n,
+                "act": "",
+                "section_type": "Section",
+                "section_number": "",
+                "section_title": None,
+                "chunk_id": None,
+                "text_excerpt": None,
+            })
+
+    # ── Fallback: [Act, Section X] pattern ────────────────────────────────────
+    legacy_pattern = r'\[([^\]]+),\s*(Section|Rule|Regulation|Clause)\s+([^\]]+)\]'
+    for act, sec_type, sec_num in re.findall(legacy_pattern, answer):
+        key = f"{act.strip()}_{sec_num.strip()}"
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+
+        citation_obj: dict = {
+            "source_index": None,
             "act": act.strip(),
             "section_type": sec_type,
             "section_number": sec_num.strip(),
+            "section_title": None,
+            "chunk_id": None,
+            "text_excerpt": None,
         }
 
         # Try to match to a retrieved chunk
@@ -159,7 +200,7 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
                 citation_obj.update({
                     "section_title": chunk.get("section_title"),
                     "chunk_id": chunk.get("chunk_id"),
-                    "text_excerpt": chunk.get("text", "")[:200],
+                    "text_excerpt": chunk.get("text", "")[:300],
                 })
                 break
 
@@ -174,6 +215,7 @@ def generate_answer(
     query: str,
     context_chunks: list[dict],
     max_tokens: int = 1000,
+    use_citations: bool = True,
 ) -> dict:
     """
     Generate a legal answer with inline citations from retrieved chunks.
@@ -182,6 +224,7 @@ def generate_answer(
         query:          Original user question
         context_chunks: Reranked chunks from hybrid_retrieve()
         max_tokens:     Max response length
+        use_citations:  Whether to instruct the LLM to output inline citations
 
     Returns:
         {
@@ -201,7 +244,8 @@ def generate_answer(
 
     context_blocks = format_context_blocks(context_chunks)
 
-    prompt = GENERATION_PROMPT.format(
+    prompt_template = GENERATION_PROMPT if use_citations else GENERATION_PROMPT_NO_CITATIONS
+    prompt = prompt_template.format(
         context_blocks=context_blocks,
         query=query,
     )
@@ -213,7 +257,7 @@ def generate_answer(
 
     system_prompt = get_system_prompt()
     answer = _llm_call(prompt, system_prompt=system_prompt, max_tokens=max_tokens)
-    citations = extract_citations(answer, context_chunks)
+    citations = extract_citations(answer, context_chunks) if use_citations else []
 
     logger.info(f"Generated answer ({len(answer)} chars, {len(citations)} citations)")
 

@@ -105,11 +105,29 @@ Return ONLY the refined query text, no explanation."""
 # ============ GENERATION ============
 
 CONTEXT_BLOCK_TEMPLATE = """---
-Source: {act} | Section {section_number}{section_title_part}
+[Source {index}] {act} | Section {section_number}{section_title_part}
 {text}
 ---"""
 
-GENERATION_PROMPT = """You are answering a question using the following retrieved context.
+GENERATION_PROMPT = """You are answering a question using the following retrieved context blocks.
+Base your answer ONLY on the provided context. Do not use prior knowledge.
+If the context does not contain enough information to answer fully, say so explicitly.
+
+IMPORTANT — Citation Rules:
+- Every factual claim MUST be cited inline using [Source N] where N is the block number.
+- Use the exact [Source N] format shown in the context headers (e.g. [Source 1], [Source 2]).
+- You may cite multiple sources for one claim: [Source 1][Source 3].
+- Do not fabricate sources. Only cite sources that appear in the context below.
+
+Retrieved Context:
+{context_blocks}
+
+Question: {query}
+
+Answer:"""
+
+
+GENERATION_PROMPT_NO_CITATIONS = """You are answering a question using the following retrieved context blocks.
 Base your answer ONLY on the provided context. Do not use prior knowledge.
 If the context does not contain enough information to answer fully, say so explicitly.
 

@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1024                  # BGE-large output size
     generation_model: str = "claude-sonnet-4-20250514"
     contextualization_model: str = "claude-haiku-20240307"
+    reranker_model: str = "BAAI/bge-reranker-large"  # cross-encoder used in hybrid_retriever
 
     # === Retrieval Parameters (Tunable) ===
     top_k_retrieval: int = 20

@@ -23,6 +23,7 @@ def answer_query(
     use_graph: bool = True,
     use_reranker: bool = True,
     use_crag: bool = True,
+    use_citations: bool = True,
     max_iterations: int | None = None,
     top_k_retrieval: int | None = None,
     top_k_rerank: int | None = None,
@@ -36,6 +37,7 @@ def answer_query(
         use_graph:      Include Neo4j graph expansion
         use_reranker:   Apply cross-encoder reranking
         use_crag:       Enable CRAG quality check + retry loop
+        use_citations:  Instruct LLM to generate inline citations
         max_iterations: Max CRAG retries (default: settings.max_agent_iterations)
         top_k_retrieval: Candidates before reranking
         top_k_rerank:    Final chunks passed to LLM
@@ -100,6 +102,7 @@ def answer_query(
     generation_result = generate_answer(
         query=query,  # always use original query for generation
         context_chunks=context_chunks,
+        use_citations=use_citations,
     )
 
     return {

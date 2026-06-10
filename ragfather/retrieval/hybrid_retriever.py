@@ -28,12 +28,31 @@ logger = logging.getLogger(__name__)
 _bm25_cache: tuple | None = None
 BM25_INDEX_PATH = "data/processed/bm25_index.pkl"
 
+# CrossEncoder reranker cache — loaded once per process
+# Avoids reloading the model (~1.1GB) on every call
+_reranker_cache: object | None = None
+
 
 def _get_bm25():
     global _bm25_cache
     if _bm25_cache is None:
         _bm25_cache = load_bm25_index(BM25_INDEX_PATH)
     return _bm25_cache
+
+
+def _get_reranker():
+    """Load CrossEncoder once and cache it for the lifetime of the process."""
+    global _reranker_cache
+    if _reranker_cache is None:
+        import torch
+        from sentence_transformers import CrossEncoder
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(
+            f"Loading CrossEncoder '{settings.reranker_model}' on {device} (first call — cached afterwards)"
+        )
+        _reranker_cache = CrossEncoder(settings.reranker_model, device=device)
+    return _reranker_cache
 
 
 # ── Reciprocal Rank Fusion ────────────────────────────────────────────────────
@@ -73,22 +92,20 @@ def _rrf_fuse(
 
 def rerank(query: str, candidates: list[dict], top_k: int = 5) -> list[dict]:
     """
-    Rerank candidates using a local cross-encoder.
-    Model: cross-encoder/ms-marco-MiniLM-L-6-v2 (free, ~80 MB, no API key)
+    Rerank candidates using a cached local cross-encoder.
+    Model is configurable via settings.reranker_model (default: BAAI/bge-reranker-large ~1.1GB).
 
     The cross-encoder reads (query, chunk_text) pairs together and produces
     a precise relevance score — much more accurate than vector similarity alone.
+    Model is loaded once per process and cached in _reranker_cache.
     """
-    import torch
-    from sentence_transformers import CrossEncoder
-
     if not candidates:
         return []
 
-    logger.info(f"Reranking {len(candidates)} candidates with cross-encoder")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.info(f"Loading CrossEncoder on {device}")
-    model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device=device)
+    logger.info(
+        f"Reranking {len(candidates)} candidates with '{settings.reranker_model}'"
+    )
+    model = _get_reranker()
 
     # Use contextualized_text if available, else raw text
     pairs = [

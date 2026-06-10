@@ -15,6 +15,8 @@ class QueryRequest(BaseModel):
     )
     use_crag: bool = Field(default=True, description="Enable CRAG quality check + retry loop")
     use_graph: bool = Field(default=True, description="Include Neo4j graph expansion")
+    use_reranker: bool = Field(default=True, description="Apply cross-encoder reranking")
+    use_citations: bool = Field(default=True, description="Instruct LLM to generate inline citations")
 
     class Config:
         json_schema_extra = {
@@ -28,12 +30,13 @@ class QueryRequest(BaseModel):
 
 
 class Citation(BaseModel):
+    source_index: Optional[int] = None  # 1-based index matching [Source N] in answer text
     act: str
     section_type: str               # "Section" | "Rule" | "Regulation"
     section_number: str
     section_title: Optional[str] = None
     chunk_id: Optional[str] = None
-    text_excerpt: Optional[str] = None
+    text_excerpt: Optional[str] = None  # first 300 chars of the source chunk
 
 
 class RetrievalStats(BaseModel):

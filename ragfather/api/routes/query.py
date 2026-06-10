@@ -40,6 +40,8 @@ async def query_endpoint(request: QueryRequest):
             filter_act=request.filter_act,
             use_graph=request.use_graph,
             use_crag=request.use_crag,
+            use_reranker=request.use_reranker,
+            use_citations=request.use_citations,
         )
     except Exception as e:
         logger.error(f"Query failed: {e}", exc_info=True)
