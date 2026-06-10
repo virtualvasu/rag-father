@@ -36,13 +36,14 @@ const Step3Results = ({ results }) => {
                   <tbody>
                     {Object.entries(run.variants).map(([vName, vData], vIdx) => {
                       const ragas = vData.ragas_scores || {};
+                      const formatPercent = (val) => val !== undefined && val !== null ? (val * 100).toFixed(1) + '%' : '-';
                       return (
                         <tr key={vName} className={`border-b border-outline-variant hover:bg-surface-variant/30 ${vIdx % 2 === 0 ? 'bg-surface' : 'bg-surface-container'} last:border-0`}>
                           <td className="py-3 px-4 font-bold text-primary">{vName}</td>
-                          <td className="py-3 px-4">{ragas.faithfulness !== undefined ? ragas.faithfulness.toFixed(2) : '-'}</td>
-                          <td className="py-3 px-4">{ragas.answer_relevancy !== undefined ? ragas.answer_relevancy.toFixed(2) : '-'}</td>
-                          <td className="py-3 px-4">{ragas.context_precision !== undefined ? ragas.context_precision.toFixed(2) : '-'}</td>
-                          <td className="py-3 px-4">{ragas.context_recall !== undefined ? ragas.context_recall.toFixed(2) : '-'}</td>
+                          <td className="py-3 px-4">{formatPercent(ragas.faithfulness)}</td>
+                          <td className="py-3 px-4">{formatPercent(ragas.answer_relevancy)}</td>
+                          <td className="py-3 px-4">{formatPercent(ragas.context_precision)}</td>
+                          <td className="py-3 px-4">{formatPercent(ragas.context_recall)}</td>
                         </tr>
                       );
                     })}

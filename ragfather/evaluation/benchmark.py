@@ -169,6 +169,11 @@ def run_benchmark(
         "timestamp":   datetime.now().isoformat(),
         "variants":    {},
         "comparison":  {},
+        "eval_params": {
+            "variants_to_run": variants_to_run,
+            "question_ids": question_ids,
+            "skip_ragas": skip_ragas
+        }
     }
 
     for variant_name in variants_to_run:
@@ -226,6 +231,21 @@ def run_benchmark(
     # Save to disk
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = RESULT_DIR / f"benchmark_{ts}.json"
+    
+    try:
+        metadata_path = Path("data/processed/training_metadata.json")
+        if metadata_path.exists():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            all_results["pipeline_params"] = metadata.get("pipeline_params", {})
+            all_results["files_used"] = metadata.get("files_used", [])
+        else:
+            all_results["pipeline_params"] = {}
+            all_results["files_used"] = []
+    except Exception as e:
+        logger.warning(f"Failed to load training metadata: {e}")
+        all_results["pipeline_params"] = {}
+        all_results["files_used"] = []
+
     out_path.write_text(json.dumps(all_results, indent=2))
     print(f"\nResults saved to: {out_path}")
 

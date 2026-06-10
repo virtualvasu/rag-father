@@ -12,7 +12,8 @@ const Step1Parameters = ({
   setNumQuestions,
   isGenerating,
   handleGenerate,
-  status
+  status,
+  generateResult
 }) => {
   return (
     <div className="border border-outline-variant rounded-none p-6 bg-surface-container">
@@ -92,6 +93,11 @@ const Step1Parameters = ({
               {isGenerating ? 'GENERATING MAGIC QUESTIONS...' : 'GENERATE SYNTHETIC DATASET'}
             </button>
           </div>
+          {generateResult && (
+            <div className={`mt-3 p-3 font-mono text-sm border ${generateResult.type === 'success' ? 'bg-primary/10 border-primary text-primary' : 'bg-error/10 border-error text-error'}`}>
+              {generateResult.message}
+            </div>
+          )}
         </div>
 
       </div>

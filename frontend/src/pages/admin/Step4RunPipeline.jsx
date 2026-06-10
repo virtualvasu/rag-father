@@ -100,15 +100,55 @@ const Step4RunPipeline = ({
         )}
 
         {pipelineStatus === 'completed' && (
-          <div className="mt-4 pt-4 border-t border-outline-variant flex justify-end">
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="py-3 px-8 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim transition-all shadow-md flex items-center gap-2"
-            >
-              LAUNCH CHAT INTERFACE
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </button>
-          </div>
+          <>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-surface border border-outline-variant p-8 max-w-md w-full shadow-2xl animate-fade-in text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-4 border-2 border-primary">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 className="text-headline-md font-headline-md text-primary mb-2">Pipeline Complete!</h3>
+                <p className="text-sm font-mono text-on-surface-variant mb-6">
+                  Documents have been successfully indexed and enriched. What would you like to do next?
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => window.location.href = '/'}
+                    className="w-full py-3 px-6 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    LAUNCH CHAT INTERFACE
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = '/evaluate'}
+                    className="w-full py-3 px-6 bg-surface border border-primary text-primary font-mono text-sm uppercase hover:bg-primary/10 transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    RUN EVALUATION
+                  </button>
+                  <button 
+                    onClick={() => document.querySelector('.fixed.inset-0').style.display = 'none'}
+                    className="w-full mt-2 text-xs font-mono text-on-surface-variant hover:text-on-surface underline transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-outline-variant flex justify-end gap-4">
+              <button 
+                onClick={() => window.location.href = '/evaluate'}
+                className="py-3 px-8 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary transition-all shadow-md flex items-center gap-2"
+              >
+                RUN EVALUATION
+              </button>
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="py-3 px-8 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim transition-all shadow-md flex items-center gap-2"
+              >
+                LAUNCH CHAT
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -1,5 +1,14 @@
 import React from 'react';
 
+const Tooltip = ({ text }) => (
+  <div className="relative group inline-block ml-2">
+    <div className="flex items-center justify-center w-4 h-4 rounded-full border border-primary text-primary text-[10px] font-bold cursor-help">i</div>
+    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-surface border border-outline-variant text-on-surface-variant text-xs font-mono shadow-lg z-50 rounded-none pointer-events-none">
+      {text}
+    </div>
+  </div>
+);
+
 const Step3PipelineConfig = ({
   pipelineConfig,
   handleConfigChange
@@ -93,19 +102,31 @@ const Step3PipelineConfig = ({
           <h3 className="font-mono text-sm text-primary uppercase">Advanced Tuning</h3>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="wipe_data_on_pipeline_run" name="wipe_data_on_pipeline_run" checked={pipelineConfig.wipe_data_on_pipeline_run} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-            <label htmlFor="wipe_data_on_pipeline_run" className="text-sm font-mono text-on-surface cursor-pointer">Wipe Data on Run (Uncheck for Append Mode)</label>
+            <div className="flex items-center">
+              <label htmlFor="wipe_data_on_pipeline_run" className="text-sm font-mono text-on-surface cursor-pointer">Wipe Data on Run</label>
+              <Tooltip text="Clears all previously stored documents and vectors before processing the new batch. Uncheck to append to the existing dataset." />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="skip_enrichment" name="skip_enrichment" checked={pipelineConfig.skip_enrichment} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-            <label htmlFor="skip_enrichment" className="text-sm font-mono text-on-surface cursor-pointer">Skip Enrichment (Faster pipeline, less contextual metadata)</label>
+            <div className="flex items-center">
+              <label htmlFor="skip_enrichment" className="text-sm font-mono text-on-surface cursor-pointer">Skip Enrichment</label>
+              <Tooltip text="Bypasses the LLM enrichment phase (which generates summaries and hypothetical questions). This significantly speeds up ingestion but reduces context richness for retrieval." />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="use_knowledge_graph" name="use_knowledge_graph" checked={pipelineConfig.use_knowledge_graph} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-            <label htmlFor="use_knowledge_graph" className="text-sm font-mono text-on-surface cursor-pointer">Use Knowledge Graph (Neo4j extraction & multi-hop retrieval)</label>
+            <div className="flex items-center">
+              <label htmlFor="use_knowledge_graph" className="text-sm font-mono text-on-surface cursor-pointer">Use Knowledge Graph</label>
+              <Tooltip text="Extracts entities and relationships from documents into Neo4j, enabling multi-hop reasoning across connected topics." />
+            </div>
           </div>
           <div className="flex items-center gap-2 mb-4">
             <input type="checkbox" id="use_cross_encoder_reranker" name="use_cross_encoder_reranker" checked={pipelineConfig.use_cross_encoder_reranker} onChange={handleConfigChange} className="w-4 h-4 accent-primary" />
-            <label htmlFor="use_cross_encoder_reranker" className="text-sm font-mono text-on-surface cursor-pointer">Use Cross-Encoder Reranker (Slower but more precise)</label>
+            <div className="flex items-center">
+              <label htmlFor="use_cross_encoder_reranker" className="text-sm font-mono text-on-surface cursor-pointer">Use Cross-Encoder Reranker</label>
+              <Tooltip text="Adds a second pass during retrieval where an advanced model strictly re-scores the initial results. Slower but greatly improves answer relevance." />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

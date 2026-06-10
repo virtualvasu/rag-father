@@ -91,7 +91,10 @@ async def get_results():
                     "filename": file.name,
                     "timestamp": data.get("timestamp"),
                     "num_questions": data.get("num_questions"),
-                    "variants": data.get("variants", {})
+                    "variants": data.get("variants", {}),
+                    "pipeline_params": data.get("pipeline_params", {}),
+                    "files_used": data.get("files_used", []),
+                    "eval_params": data.get("eval_params", {})
                 })
             except Exception as e:
                 logger.error(f"Failed to load {file.name}: {e}")

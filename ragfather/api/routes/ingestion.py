@@ -116,6 +116,19 @@ async def run_full_pipeline(config: PipelineConfig):
             status_callback=update_status,
         )
         
+        # Save training metadata for evaluation tracking
+        try:
+            raw_dir = Path("data/raw")
+            files_used = [f.name for f in raw_dir.glob("*")] if raw_dir.exists() else []
+            metadata_path = Path("data/processed/training_metadata.json")
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "pipeline_params": config.dict(),
+                    "files_used": files_used
+                }, f, indent=2)
+        except Exception as meta_err:
+            logger.warning(f"Failed to save training metadata: {meta_err}")
+
         pipeline_job["status"] = "completed"
         pipeline_job["message"] = "Pipeline completed successfully."
         pipeline_job["result"] = {
