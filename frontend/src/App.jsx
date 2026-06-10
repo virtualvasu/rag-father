@@ -4,29 +4,19 @@ import LandingPage from './pages/LandingPage';
 import ChatInterface from './pages/ChatInterface';
 import AdminInterface from './pages/AdminInterface';
 import EvaluationInterface from './pages/EvaluationInterface';
-
 function App() {
-  const [isDark, setIsDark] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
-
+  // Always use dark mode
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
-
-  const toggleTheme = () => setIsDark(!isDark);
+    document.documentElement.classList.add('dark');
+  }, []);
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage toggleTheme={toggleTheme} isDark={isDark} />} />
-        <Route path="/chat" element={<ChatInterface toggleTheme={toggleTheme} isDark={isDark} />} />
-        <Route path="/admin" element={<AdminInterface toggleTheme={toggleTheme} isDark={isDark} />} />
-        <Route path="/evaluate" element={<EvaluationInterface toggleTheme={toggleTheme} isDark={isDark} />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/chat" element={<ChatInterface />} />
+        <Route path="/admin" element={<AdminInterface />} />
+        <Route path="/evaluate" element={<EvaluationInterface />} />
       </Routes>
     </Router>
   );

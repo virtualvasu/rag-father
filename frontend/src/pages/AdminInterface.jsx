@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { BarChart3, ArrowLeft, ArrowRight } from 'lucide-react';
+import StepIndicator from '../components/StepIndicator';
+
+// Admin Steps
 import Step1Upload from './admin/Step1Upload';
 import Step2SystemIdentity from './admin/Step2SystemIdentity';
 import Step3PipelineConfig from './admin/Step3PipelineConfig';
 import Step4RunPipeline from './admin/Step4RunPipeline';
 
-const AdminInterface = ({ toggleTheme, isDark }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+const AdminInterface = () => {
+
+  // ----------------------------------------------------
+  // PIPELINE STATE
+  // ----------------------------------------------------
+  const [pipelineStep, setPipelineStep] = useState(0); // 0-indexed for StepIndicator
   const [files, setFiles] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -49,42 +58,16 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
   });
   const fileInputRef = useRef(null);
 
-  const handleConfigChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setPipelineConfig(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
-    }));
-  };
 
-  const fetchDocuments = async () => {
-    try {
-      const res = await fetch('/api/documents');
-      if (res.ok) {
-        const data = await res.json();
-        setDocuments(data.files || []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch documents", err);
-    }
-  };
 
-  const handleDeleteDoc = async (filename) => {
-    if (window.confirm(`Are you sure you want to delete ${filename}?`)) {
-      try {
-        const res = await fetch(`/api/documents/${filename}`, { method: 'DELETE' });
-        if (res.ok) fetchDocuments();
-      } catch (err) {
-        console.error("Failed to delete document", err);
-      }
-    }
-  };
-
+  // ----------------------------------------------------
+  // EFFECTS: PIPELINE
+  // ----------------------------------------------------
   useEffect(() => {
     fetchDocuments();
+    fetchSystemPrompt();
   }, []);
 
-  // Poll pipeline status
   useEffect(() => {
     let interval;
     if (pipelineStatus === 'running') {
@@ -103,37 +86,18 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
     return () => clearInterval(interval);
   }, [pipelineStatus]);
 
-  // Stream pipeline logs via SSE
   useEffect(() => {
     let eventSource;
     if (pipelineStatus === 'running') {
-      setPipelineLogs([]); // Clear before starting
+      setPipelineLogs([]); 
       eventSource = new EventSource('/api/system/logs/stream');
-      
-      eventSource.onmessage = (event) => {
-        setPipelineLogs(prev => {
-          const newLogs = [...prev, event.data];
-          return newLogs.slice(-500); // Keep last 500 lines
-        });
-      };
-
-      eventSource.onerror = (error) => {
-        console.error("EventSource failed:", error);
-        if (eventSource.readyState === EventSource.CLOSED) {
-          // Connection closed by server
-        }
-      };
+      eventSource.onmessage = (event) => setPipelineLogs(prev => [...prev, event.data].slice(-500));
     } else {
       if (eventSource) eventSource.close();
     }
-    
-    return () => {
-      if (eventSource) eventSource.close();
-    };
+    return () => { if (eventSource) eventSource.close(); };
   }, [pipelineStatus]);
 
-
-  // Poll agent status
   useEffect(() => {
     let intervalId;
     if (agentStatus === 'running') {
@@ -146,34 +110,56 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
             setAgentLogs(data.logs || []);
             if (data.status === 'completed' || data.status === 'failed') {
               clearInterval(intervalId);
-              fetchDocuments(); // Refresh documents
+              fetchDocuments(); 
             }
           }
-        } catch (err) {
-          console.error("Failed to fetch agent status", err);
-        }
+        } catch (err) {}
       }, 2000);
     }
     return () => clearInterval(intervalId);
   }, [agentStatus]);
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
+
+
+  // ----------------------------------------------------
+  // PIPELINE HANDLERS
+  // ----------------------------------------------------
+  const handleConfigChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setPipelineConfig(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
+    }));
   };
+
+  const fetchDocuments = async () => {
+    try {
+      const res = await fetch('/api/documents');
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data.files || []);
+      }
+    } catch (err) {}
+  };
+
+  const handleDeleteDoc = async (filename) => {
+    if (window.confirm(`Are you sure you want to delete ${filename}?`)) {
+      try {
+        const res = await fetch(`/api/documents/${filename}`, { method: 'DELETE' });
+        if (res.ok) fetchDocuments();
+      } catch (err) {}
+    }
+  };
+
+  const handleFileChange = (e) => setFiles(Array.from(e.target.files));
 
   const handleUpload = async () => {
     if (files.length === 0) return;
     setUploadStatus('uploading');
-    
     const formData = new FormData();
     files.forEach(file => formData.append('files', file));
-
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
+      const response = await fetch('/api/upload', { method: 'POST', body: formData });
       if (response.ok) {
         setUploadStatus('success');
         setFiles([]);
@@ -183,7 +169,6 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         setUploadStatus('error');
       }
     } catch (error) {
-      console.error("Upload failed", error);
       setUploadStatus('error');
     }
   };
@@ -191,8 +176,6 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
   const startPipeline = async () => {
     try {
       let payload = { ...pipelineConfig };
-      
-      // Auto-configure Groq mapping
       if (payload.enrichment_provider === 'groq') {
         payload.enrichment_provider = 'custom';
         payload.custom_llm_base_url = 'https://api.groq.com/openai/v1';
@@ -204,9 +187,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
 
       const response = await fetch('/api/pipeline/run', { 
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (response.ok) {
@@ -219,14 +200,13 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         setPipelineStatus('failed');
       }
     } catch (error) {
-      console.error("Failed to start pipeline", error);
       setPipelineMessage(`> Error: Could not connect to server`);
       setPipelineStatus('failed');
     }
   };
 
   const handleReset = async () => {
-    if (window.confirm("ARE YOU SURE? This will permanently delete all uploaded PDFs and reset the workspace data. The databases will be fully overwritten on the next pipeline run.")) {
+    if (window.confirm("ARE YOU SURE? This will permanently delete all uploaded PDFs and reset the workspace data.")) {
       try {
         setPipelineMessage('Wiping system data...');
         const response = await fetch('/api/pipeline/reset', { method: 'DELETE' });
@@ -239,10 +219,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         } else {
           setPipelineMessage('> Error: Failed to reset system.');
         }
-      } catch (error) {
-        console.error("Failed to reset system", error);
-        setPipelineMessage('> Error: Could not connect to server.');
-      }
+      } catch (error) {}
     }
   };
 
@@ -258,9 +235,7 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         setAgentStatus('running');
         setAgentLogs([]);
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   };
 
   const fetchSystemPrompt = async () => {
@@ -270,14 +245,8 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         const data = await res.json();
         setSystemPrompt(data.system_prompt || "");
       }
-    } catch (err) {
-      console.error("Failed to fetch system prompt", err);
-    }
+    } catch (err) {}
   };
-
-  useEffect(() => {
-    fetchSystemPrompt();
-  }, []);
 
   const handleSavePrompt = async () => {
     try {
@@ -286,15 +255,8 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system_prompt: systemPrompt })
       });
-      if (res.ok) {
-        alert("System prompt saved successfully!");
-      } else {
-        alert("Failed to save system prompt.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error saving system prompt.");
-    }
+      if (res.ok) alert("System prompt saved successfully!");
+    } catch (err) {}
   };
 
   const handleGeneratePrompt = async () => {
@@ -309,13 +271,8 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
       if (res.ok) {
         const data = await res.json();
         setSystemPrompt(data.system_prompt);
-        alert("System prompt generated and saved!");
-      } else {
-        alert("Failed to generate system prompt.");
       }
     } catch (err) {
-      console.error(err);
-      alert("Error generating system prompt.");
     } finally {
       setIsGeneratingPrompt(false);
     }
@@ -327,146 +284,115 @@ const AdminInterface = ({ toggleTheme, isDark }) => {
       setAgentStatus('idle');
       setAgentLogs([]);
       setAgentPrompt('');
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   };
 
+
+
+  const pipelineSteps = [
+    { id: 'upload', label: 'Upload Data' },
+    { id: 'identity', label: 'System Identity' },
+    { id: 'config', label: 'Pipeline Config' },
+    { id: 'execute', label: 'Execute' }
+  ];
+
+
+
   return (
-    <div className={`min-h-screen ${isDark ? 'dark bg-background text-on-surface' : 'bg-background text-on-surface'}`}>
-      <div className="w-full px-4 md:px-12 py-8 mx-auto">
-        <header className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-headline-xl font-headline-xl text-primary mb-2">System Admin</h1>
-            <p className="text-body-lg text-on-surface-variant font-mono">DOCUMENT INGESTION & PIPELINE CONTROL</p>
-          </div>
-          <button onClick={toggleTheme} className="p-2 bg-surface border border-outline-variant hover:border-primary text-on-surface transition-colors cursor-pointer">
-            {isDark ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-            )}
-          </button>
-        </header>
-
-        {/* Stepper Progress */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between">
-            {['Upload Documents', 'System Identity', 'Pipeline Config', 'Run Pipeline'].map((stepName, index) => {
-              const stepNumber = index + 1;
-              const isActive = currentStep === stepNumber;
-              const isPast = currentStep > stepNumber;
-              return (
-                <div key={stepNumber} className="flex flex-col items-center relative z-10 w-1/4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-sm border-2 transition-colors ${
-                    isActive ? 'bg-primary border-primary text-on-primary' : 
-                    isPast ? 'bg-primary-fixed border-primary-fixed text-on-primary-fixed' : 
-                    'bg-surface border-outline-variant text-on-surface-variant'
-                  }`}>
-                    {stepNumber}
-                  </div>
-                  <div className={`mt-2 text-xs font-mono text-center ${isActive || isPast ? 'text-primary' : 'text-on-surface-variant'}`}>
-                    {stepName}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="relative -mt-11 top-4 h-1 bg-outline-variant z-0 mx-10">
-            <div className="absolute top-0 left-0 h-full bg-primary transition-all duration-300" style={{ width: `${((currentStep - 1) / 3) * 100}%` }}></div>
+    <div className={`min-h-screen dark bg-surface-dark text-text-primary font-sans`}>
+      
+      {/* Top Header */}
+      <header className="bg-surface-highest/80 backdrop-blur-xl border-b border-border sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-8">
+            <Link to="/" className="font-display text-xl font-bold tracking-tight text-text-primary hover:text-primary transition-colors">
+              RAGFATHER
+            </Link>
+            
+            {/* Nav */}
+            <nav className="hidden md:flex bg-surface-dark border border-border p-1 rounded-lg">
+              <Link 
+                to="/evaluate"
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all text-text-secondary hover:text-text-primary hover:bg-surface-high"
+              >
+                <BarChart3 className="w-4 h-4" /> Evaluation Portal
+              </Link>
+            </nav>
           </div>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 gap-8">
-          
-          {currentStep === 1 && (
-            <Step1Upload 
-              files={files}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              handleUpload={handleUpload}
-              uploadStatus={uploadStatus}
-              documents={documents}
-              setPreviewDoc={setPreviewDoc}
-              handleDeleteDoc={handleDeleteDoc}
-              agentPrompt={agentPrompt}
-              setAgentPrompt={setAgentPrompt}
-              agentStatus={agentStatus}
-              handleRunAgent={handleRunAgent}
-              handleResetAgent={handleResetAgent}
-              agentLogs={agentLogs}
-            />
-          )}
+      <main className="max-w-5xl mx-auto px-6 md:px-12 py-12">
+        <div className="animate-fade-in space-y-12">
+            <div className="mb-8">
+              <h1 className="text-3xl font-display font-bold text-text-primary mb-2">System Admin</h1>
+              <p className="text-text-secondary font-sans">Configure your end-to-end RAG pipeline, ingest documents, and index them into vector and graph databases.</p>
+            </div>
 
-          {currentStep === 2 && (
-            <Step2SystemIdentity 
-              promptUseCase={promptUseCase}
-              setPromptUseCase={setPromptUseCase}
-              isGeneratingPrompt={isGeneratingPrompt}
-              handleGeneratePrompt={handleGeneratePrompt}
-              systemPrompt={systemPrompt}
-              setSystemPrompt={setSystemPrompt}
-              handleSavePrompt={handleSavePrompt}
-            />
-          )}
+            <StepIndicator steps={pipelineSteps} currentStep={pipelineStep} onStepClick={(i) => setPipelineStep(i)} />
 
-          {currentStep === 3 && (
-            <Step3PipelineConfig 
-              pipelineConfig={pipelineConfig}
-              handleConfigChange={handleConfigChange}
-            />
-          )}
+            <div className="mt-12">
+              {pipelineStep === 0 && (
+                <Step1Upload 
+                  files={files} fileInputRef={fileInputRef} handleFileChange={handleFileChange} handleUpload={handleUpload}
+                  uploadStatus={uploadStatus} documents={documents} setPreviewDoc={setPreviewDoc} handleDeleteDoc={handleDeleteDoc}
+                  agentPrompt={agentPrompt} setAgentPrompt={setAgentPrompt} agentStatus={agentStatus} handleRunAgent={handleRunAgent}
+                  handleResetAgent={handleResetAgent} agentLogs={agentLogs}
+                />
+              )}
+              {pipelineStep === 1 && (
+                <Step2SystemIdentity 
+                  promptUseCase={promptUseCase} setPromptUseCase={setPromptUseCase} isGeneratingPrompt={isGeneratingPrompt}
+                  handleGeneratePrompt={handleGeneratePrompt} systemPrompt={systemPrompt} setSystemPrompt={setSystemPrompt}
+                  handleSavePrompt={handleSavePrompt}
+                />
+              )}
+              {pipelineStep === 2 && (
+                <Step3PipelineConfig pipelineConfig={pipelineConfig} handleConfigChange={handleConfigChange} />
+              )}
+              {pipelineStep === 3 && (
+                <Step4RunPipeline 
+                  pipelineStatus={pipelineStatus} pipelineMessage={pipelineMessage} pipelineResult={pipelineResult}
+                  pipelineLogs={pipelineLogs} startPipeline={startPipeline} handleReset={handleReset}
+                  pipelineConfig={pipelineConfig} systemPrompt={systemPrompt}
+                />
+              )}
 
-          {currentStep === 4 && (
-            <Step4RunPipeline 
-              pipelineStatus={pipelineStatus}
-              pipelineMessage={pipelineMessage}
-              pipelineResult={pipelineResult}
-              pipelineLogs={pipelineLogs}
-              startPipeline={startPipeline}
-              handleReset={handleReset}
-              pipelineConfig={pipelineConfig}
-              systemPrompt={systemPrompt}
-            />
-          )}
-
-          {/* Navigation Controls */}
-          <div className="flex justify-between mt-8 border-t border-outline-variant pt-6">
-            <button
-              onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-              disabled={currentStep === 1 || pipelineStatus === 'running'}
-              className="py-3 px-8 bg-surface border border-outline-variant text-on-surface font-mono text-sm uppercase hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              BACK
-            </button>
-            <button
-              onClick={() => setCurrentStep(prev => Math.min(4, prev + 1))}
-              disabled={currentStep === 4 || pipelineStatus === 'running'}
-              className="py-3 px-8 bg-primary text-on-primary font-mono text-sm uppercase hover:bg-primary-fixed-dim disabled:opacity-50 transition-all shadow-md flex items-center gap-2"
-            >
-              NEXT STEP
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </button>
+              {/* Navigation Controls */}
+              <div className="flex justify-between mt-8 pt-8 border-t border-border">
+                <button
+                  onClick={() => setPipelineStep(prev => Math.max(0, prev - 1))}
+                  disabled={pipelineStep === 0 || pipelineStatus === 'running'}
+                  className="py-3 px-6 bg-surface-high border border-border text-text-primary font-sans text-sm font-semibold rounded-xl hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" /> BACK
+                </button>
+                <button
+                  onClick={() => setPipelineStep(prev => Math.min(3, prev + 1))}
+                  disabled={pipelineStep === 3 || pipelineStatus === 'running'}
+                  className="py-3 px-6 bg-primary text-white font-sans text-sm font-semibold rounded-xl hover:bg-primary-light disabled:opacity-50 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                >
+                  NEXT STEP <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
-
-        </div>
-      </div>
+      </main>
 
       {/* Document Preview Modal */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8">
-          <div className="bg-surface border border-outline-variant w-full max-w-6xl h-full max-h-[90vh] flex flex-col shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-outline-variant">
-              <h3 className="font-mono text-primary font-bold">{previewDoc}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8 animate-fade-in">
+          <div className="bg-surface-highest border border-border rounded-2xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-surface-dark">
+              <h3 className="font-sans font-semibold text-primary">{previewDoc}</h3>
               <button 
                 onClick={() => setPreviewDoc(null)}
-                className="p-2 bg-error/10 text-error hover:bg-error hover:text-on-error transition-colors font-mono text-xs uppercase"
+                className="px-4 py-2 rounded-lg bg-surface hover:bg-error/10 text-text-secondary hover:text-error transition-colors font-sans text-sm font-medium"
               >
                 Close (ESC)
               </button>
             </div>
-            <div className="flex-grow overflow-hidden bg-white">
+            <div className="flex-grow bg-white">
               <iframe 
                 src={`/api/documents/${previewDoc}`} 
                 title="Document Preview" 
