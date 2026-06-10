@@ -15,21 +15,28 @@
 }
 
 :root {
-  --color-primary: #3B82F6; /* Professional Blue */
+  --color-primary: #2563EB;
   --color-primary-light: #60A5FA;
-  --color-primary-dim: #2563EB;
+  --color-primary-dim: #1D4ED8;
   --color-secondary: #F59E0B;
   --color-secondary-dim: #D97706;
   --color-accent: #10B981;
   --color-error: #EF4444;
-  --color-surface-dark: #121212; /* Solid neutral dark */
-  --color-surface: #1E1E1E;
-  --color-surface-high: #2A2A2A;
-  --color-surface-highest: #333333;
-  --color-border: #404040;
-  --color-text-primary: #F9F9F9;
-  --color-text-secondary: #A3A3A3;
-  --color-text-muted: #737373;
+  --color-surface-dark: #000000; /* Pure Black */
+  --color-surface: #0A0A0A;
+  --color-surface-high: rgba(30, 30, 30, 0.5); /* Glass base */
+  --color-surface-highest: rgba(50, 50, 50, 0.7);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text-primary: #F5F5F7; /* Apple off-white */
+  --color-text-secondary: #86868B; /* Apple grey */
+  --color-text-muted: #6E6E73;
+}
+
+.glass-panel {
+  background: var(--color-surface-high);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--color-border);
 }
 
 ::-webkit-scrollbar { width: 6px; }

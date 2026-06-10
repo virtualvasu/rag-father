@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { 
   Sun, Moon, ArrowRight, Sliders, Layers, 
   BarChart3, Cpu, Terminal, ShieldCheck,
   Code2, Play
 } from 'lucide-react';
-import PipelineVisualizer from '../components/landing/PipelineVisualizer';
+import ParticleBackground from '../components/landing/ParticleBackground';
+import JourneyLine from '../components/landing/JourneyLine';
 
 export default function LandingPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -16,12 +17,28 @@ export default function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
   const opacityProgress = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const heroTexts = [
+    "Ingesting docs...",
+    "Chunking content...",
+    "Embedding vectors...",
+    "Answer ready."
+  ];
+
   useEffect(() => {
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    
+    const interval = setInterval(() => {
+      setCurrentTextIndex((prev) => (prev + 1) % heroTexts.length);
+    }, 2500);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearInterval(interval);
+    };
   }, []);
 
   const containerVariants = {
@@ -93,7 +110,8 @@ export default function LandingPage() {
       <main className="relative z-10 max-w-7xl mx-auto px-6 md:px-12">
         
         {/* Hero Section */}
-        <section className="min-h-[90vh] flex flex-col justify-center items-center text-center pt-20 pb-12 relative">
+        <section className="min-h-[90vh] flex flex-col justify-center items-center text-center pt-20 pb-12 relative overflow-hidden">
+          <ParticleBackground />
           <motion.div 
             initial="hidden"
             animate="visible"
@@ -101,17 +119,25 @@ export default function LandingPage() {
             style={{ y: heroY, opacity: opacityProgress }}
             className="flex flex-col items-center gap-8 z-10 w-full max-w-4xl"
           >
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-surface-high/50 backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border glass-panel">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
               <span className="font-mono text-xs text-text-secondary uppercase tracking-wider font-medium">OPEN SOURCE · SELF-HOSTED · LOCAL-FIRST</span>
             </motion.div>
 
-            <motion.h1 variants={itemVariants} className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-text-primary leading-[1.1]">
-              Build. Evaluate.<br />Deploy. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-light to-secondary">
-                Your RAG Pipeline.
-              </span>
-            </motion.h1>
+            <div className="h-[120px] md:h-[180px] lg:h-[200px] flex flex-col items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.h1 
+                  key={currentTextIndex}
+                  initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
+                  animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                  exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-text-secondary leading-[1.1] pb-2"
+                >
+                  {heroTexts[currentTextIndex]}
+                </motion.h1>
+              </AnimatePresence>
+            </div>
             
             <motion.p variants={itemVariants} className="font-sans text-lg md:text-xl text-text-secondary max-w-2xl font-light leading-relaxed">
               The end-to-end platform for creating production-grade Retrieval-Augmented Generation systems. Total customization. Rigorous evaluation. Complete ownership.
@@ -162,7 +188,7 @@ export default function LandingPage() {
             </p>
           </div>
           
-          <PipelineVisualizer />
+          <JourneyLine />
         </section>
 
         {/* Feature Grid */}
@@ -189,7 +215,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group p-8 rounded-2xl bg-surface-high border border-border hover:border-primary transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)]"
+                className="group glass-panel p-8 rounded-2xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.15)] hover:border-primary-light/50"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="w-6 h-6 text-primary" />
@@ -229,7 +255,7 @@ export default function LandingPage() {
               </Link>
             </div>
             
-            <div className="bg-surface-high border border-border rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
 
               
               <h3 className="font-mono text-sm uppercase tracking-wider text-text-secondary mb-6 flex items-center gap-2">
@@ -282,7 +308,7 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-3xl mx-auto">
-            <div className="bg-surface-high border border-border rounded-2xl overflow-hidden font-mono text-sm shadow-2xl">
+            <div className="glass-panel rounded-2xl overflow-hidden font-mono text-sm shadow-2xl">
               <div className="flex items-center gap-2 px-4 py-3 bg-surface-highest border-b border-border">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
