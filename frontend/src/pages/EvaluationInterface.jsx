@@ -9,8 +9,11 @@ import EvaluationHistory from './evaluation/EvaluationHistory';
 import { saveEvaluation } from '../utils/db';
 
 import { ArrowLeft, ArrowRight, Clock, Settings2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import EvalIntro from '../components/evaluation/EvalIntro';
 
 const EvaluationInterface = () => {
+  const [showIntro, setShowIntro] = useState(true);
   const [evalStep, setEvalStep] = useState(0); // 0-indexed
   const [variants, setVariants] = useState([]);
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -183,7 +186,17 @@ const EvaluationInterface = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 md:px-12 py-12">
-        <div className="animate-fade-in space-y-12">
+        <AnimatePresence mode="wait">
+          {showIntro ? (
+            <EvalIntro key="intro" onContinue={() => setShowIntro(false)} />
+          ) : (
+            <motion.div 
+              key="wizard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-12"
+            >
           <div className="flex justify-between items-end mb-8">
             <div>
               <h1 className="text-3xl font-display font-bold text-text-primary mb-2">Evaluation Portal</h1>
@@ -245,7 +258,9 @@ const EvaluationInterface = () => {
               </div>
             </>
           )}
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

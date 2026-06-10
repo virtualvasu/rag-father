@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { 
-  Sun, Moon, ArrowRight, Sliders, Layers, 
+import {
+  Sun, Moon, ArrowRight, Sliders, Layers,
   BarChart3, Cpu, Terminal, ShieldCheck,
   Code2, Play
 } from 'lucide-react';
@@ -13,13 +13,14 @@ import GlobalCompanion from '../components/landing/GlobalCompanion';
 export default function LandingPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  
+
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
   const opacityProgress = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const heroTexts = [
+    "RAGFATHER.",
     "Ingesting docs...",
     "Chunking content...",
     "Embedding vectors...",
@@ -31,7 +32,7 @@ export default function LandingPage() {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener('mousemove', handleMouseMove);
-    
+
     const interval = setInterval(() => {
       setCurrentTextIndex((prev) => (prev + 1) % heroTexts.length);
     }, 2500);
@@ -52,20 +53,20 @@ export default function LandingPage() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
+    visible: {
       opacity: 1, y: 0,
       transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-surface-dark font-sans text-text-primary antialiased selection:bg-primary/30 selection:text-primary relative overflow-x-hidden"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Dynamic Cursor Glow */}
-      <div 
+      <div
         className="fixed top-0 left-0 w-[600px] h-[600px] rounded-full pointer-events-none z-0 transition-opacity duration-300 mix-blend-screen"
         style={{
           background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.03) 40%, rgba(0, 0, 0, 0) 70%)',
@@ -75,8 +76,8 @@ export default function LandingPage() {
       />
 
       {/* Grid Pattern Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]" 
-           style={{ backgroundImage: 'linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: 'linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 
       {/* Navigation */}
       <header className="bg-surface-dark/80 backdrop-blur-xl w-full top-0 sticky z-50 border-b border-border transition-all duration-300">
@@ -85,7 +86,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 cursor-pointer group">
             <span className="font-display text-xl font-bold text-text-primary tracking-tight">RAGFATHER</span>
           </div>
-          
+
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-8">
             {['Features', 'How It Works', 'Evaluation', 'Docs'].map((item) => (
@@ -94,7 +95,7 @@ export default function LandingPage() {
               </a>
             ))}
           </nav>
-          
+
           {/* Actions */}
           <div className="flex items-center gap-6">
             <Link to="/chat" className="hidden md:block font-sans text-sm font-medium text-text-secondary hover:text-primary transition-colors">
@@ -109,11 +110,11 @@ export default function LandingPage() {
       </header>
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 md:px-12">
-        
+
         {/* Hero Section */}
         <section className="min-h-[90vh] flex flex-col justify-center items-center text-center pt-20 pb-12 relative overflow-hidden">
           <ParticleBackground />
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
@@ -127,7 +128,7 @@ export default function LandingPage() {
 
             <div className="h-[120px] md:h-[180px] lg:h-[200px] flex flex-col items-center justify-center">
               <AnimatePresence mode="wait">
-                <motion.h1 
+                <motion.h1
                   key={currentTextIndex}
                   initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
                   animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
@@ -139,11 +140,11 @@ export default function LandingPage() {
                 </motion.h1>
               </AnimatePresence>
             </div>
-            
+
             <motion.p variants={itemVariants} className="font-sans text-lg md:text-xl text-text-secondary max-w-2xl font-light leading-relaxed">
               The end-to-end platform for creating production-grade Retrieval-Augmented Generation systems. Total customization. Rigorous evaluation. Complete ownership.
             </motion.p>
-            
+
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full justify-center">
               <Link to="/admin" className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-light text-white font-sans text-base font-semibold rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] flex items-center justify-center gap-3">
                 <span>Get Started</span>
@@ -158,7 +159,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <motion.section 
+        <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -188,7 +189,7 @@ export default function LandingPage() {
               Stop guessing what happens inside the black box. Ragfather exposes every stage of the RAG process for you to inspect, configure, and optimize.
             </p>
           </div>
-          
+
           <JourneyLine />
         </section>
 
@@ -210,7 +211,7 @@ export default function LandingPage() {
               { icon: Terminal, title: 'Real-time Logs', desc: 'SSE-powered live log streaming during pipeline execution so you can see exactly what is happening under the hood.' },
               { icon: ShieldCheck, title: 'Local-First Privacy', desc: 'Everything can run entirely on your infrastructure. Zero data leaves your machine when using local Ollama models.' },
             ].map((feature, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -255,14 +256,14 @@ export default function LandingPage() {
                 Explore the Evaluation Portal <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            
+
             <div className="glass-panel rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
 
-              
+
               <h3 className="font-mono text-sm uppercase tracking-wider text-text-secondary mb-6 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" /> Ablation Study Results
               </h3>
-              
+
               <div className="space-y-6">
                 {[
                   { name: 'naive_rag', f: 72.3, a: 68.5, p: 61.2, r: 58.9 },
@@ -320,16 +321,16 @@ export default function LandingPage() {
               </div>
               <div className="p-6 space-y-4 text-text-primary">
                 <div>
-                  <span className="text-text-muted"># 1. Clone the repository</span><br/>
-                  <span className="text-secondary">git clone</span> https://github.com/yourusername/ragfather.git<br/>
+                  <span className="text-text-muted"># 1. Clone the repository</span><br />
+                  <span className="text-secondary">git clone</span> https://github.com/yourusername/ragfather.git<br />
                   <span className="text-secondary">cd</span> ragfather
                 </div>
                 <div>
-                  <span className="text-text-muted"># 2. Add your documents</span><br/>
+                  <span className="text-text-muted"># 2. Add your documents</span><br />
                   <span className="text-secondary">cp</span> ~/my-docs/*.pdf ./data/raw/
                 </div>
                 <div>
-                  <span className="text-text-muted"># 3. Start the entire stack</span><br/>
+                  <span className="text-text-muted"># 3. Start the entire stack</span><br />
                   <span className="text-secondary">docker-compose</span> up -d
                 </div>
                 <div className="text-accent flex items-center gap-2 mt-4 pt-4 border-t border-border/50">

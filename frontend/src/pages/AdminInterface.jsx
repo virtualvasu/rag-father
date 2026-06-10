@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { BarChart3, ArrowLeft, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import StepIndicator from '../components/StepIndicator';
+import AdminIntro from '../components/admin/AdminIntro';
 
 // Admin Steps
 import Step1Upload from './admin/Step1Upload';
@@ -10,6 +12,7 @@ import Step3PipelineConfig from './admin/Step3PipelineConfig';
 import Step4RunPipeline from './admin/Step4RunPipeline';
 
 const AdminInterface = () => {
+  const [showIntro, setShowIntro] = useState(true);
 
   // ----------------------------------------------------
   // PIPELINE STATE
@@ -323,8 +326,18 @@ const AdminInterface = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 md:px-12 py-12">
-        <div className="animate-fade-in space-y-12">
-            <div className="mb-8">
+        <AnimatePresence mode="wait">
+          {showIntro ? (
+            <AdminIntro key="intro" onContinue={() => setShowIntro(false)} />
+          ) : (
+            <motion.div 
+              key="wizard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-12"
+            >
+              <div className="mb-8">
               <h1 className="text-3xl font-display font-bold text-text-primary mb-2">System Admin</h1>
               <p className="text-text-secondary font-sans">Configure your end-to-end RAG pipeline, ingest documents, and index them into vector and graph databases.</p>
             </div>
@@ -376,7 +389,9 @@ const AdminInterface = () => {
                 </button>
               </div>
             </div>
-          </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Document Preview Modal */}
