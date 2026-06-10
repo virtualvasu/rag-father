@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import ParticleBackground from '../components/landing/ParticleBackground';
 import JourneyLine from '../components/landing/JourneyLine';
+import GlobalCompanion from '../components/landing/GlobalCompanion';
 
 export default function LandingPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -361,6 +362,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <GlobalCompanion />
     </div>
   );
 }
