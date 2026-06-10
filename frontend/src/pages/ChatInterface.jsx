@@ -6,9 +6,12 @@ import {
   Moon, Sun, ArrowRight, Paperclip, Lock, 
   Cpu, Search, Network, FileText, Scale,
   Copy, Flag, BookOpen, RotateCw, Layers, Server,
-  ChevronDown, ChevronUp, Activity, Terminal
+  ChevronDown, ChevronUp, Activity, Terminal,
+  Trash2, AlertTriangle, Info
 } from 'lucide-react';
+import { getSession, saveSession } from '../utils/chatDb';
 import Sidebar from '../components/Sidebar';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
@@ -20,7 +23,33 @@ export default function ChatInterface() {
   const [useCitations, setUseCitations] = useState(true);
   const [tracePanelOpen, setTracePanelOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [storageWarning, setStorageWarning] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const sessionId = new URLSearchParams(location.search).get('session');
+
+  // Load session on mount or when sessionId changes
+  useEffect(() => {
+    const loadSession = async () => {
+      if (!sessionId) {
+        setMessages([]);
+        return;
+      }
+      try {
+        const session = await getSession(sessionId);
+        if (session && session.messages) {
+          setMessages(session.messages);
+        } else {
+          setMessages([]);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      }
+    };
+    loadSession();
+  }, [sessionId]);
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -45,9 +74,38 @@ export default function ChatInterface() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     
-    setMessages(prev => [...prev, newUserMsg]);
+    const newMessages = [...messages, newUserMsg];
+    setMessages(newMessages);
     setInputValue('');
     setIsLoading(true);
+
+    let currentId = sessionId;
+    let sessionTitle = messages.length > 0 ? undefined : userQuery.slice(0, 30) + (userQuery.length > 30 ? '...' : '');
+
+    if (!currentId) {
+      currentId = 'session_' + Date.now();
+      navigate(`/chat?session=${currentId}`, { replace: true });
+    } else {
+      try {
+        const existingSession = await getSession(currentId);
+        if (existingSession && existingSession.title) {
+          sessionTitle = existingSession.title;
+        }
+      } catch (err) {}
+    }
+
+    try {
+      await saveSession({
+        id: currentId,
+        title: sessionTitle || 'New Chat',
+        updatedAt: Date.now(),
+        messages: newMessages
+      });
+    } catch (err) {
+      if (err.message === 'QuotaExceededError') {
+        setStorageWarning("Your browser storage is full. Please clear some chat history to save new messages.");
+      }
+    }
 
     try {
       const response = await fetch('/api/query', {
@@ -81,7 +139,21 @@ export default function ChatInterface() {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMessages(prev => [...prev, newAssistantMsg]);
+      const finalMessages = [...newMessages, newAssistantMsg];
+      setMessages(finalMessages);
+      
+      try {
+        await saveSession({
+          id: currentId,
+          title: sessionTitle || 'New Chat',
+          updatedAt: Date.now(),
+          messages: finalMessages
+        });
+      } catch (err) {
+        if (err.message === 'QuotaExceededError') {
+          setStorageWarning("Your browser storage is full. Please clear some chat history to save new messages.");
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch query:", error);
       const errorMsg = {
@@ -91,7 +163,22 @@ export default function ChatInterface() {
         isError: true,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, errorMsg]);
+      
+      const finalMessagesWithError = [...newMessages, errorMsg];
+      setMessages(finalMessagesWithError);
+      
+      try {
+        await saveSession({
+          id: currentId,
+          title: sessionTitle || 'New Chat',
+          updatedAt: Date.now(),
+          messages: finalMessagesWithError
+        });
+      } catch (err) {
+        if (err.message === 'QuotaExceededError') {
+          setStorageWarning("Your browser storage is full. Please clear some chat history to save new messages.");
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +231,22 @@ export default function ChatInterface() {
               </button>
             </div>
           </header>
+
+          {/* Storage Warning Banner */}
+          {storageWarning && (
+            <div className="bg-error/10 border-b border-error/20 px-6 py-3 flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-error flex-shrink-0" />
+              <p className="text-sm font-sans text-error flex-1">{storageWarning}</p>
+            </div>
+          )}
+
+          {/* Storage Info Banner */}
+          <div className="bg-surface-high border-b border-border px-6 py-2 flex items-center justify-center gap-2 shadow-sm">
+            <Info className="w-4 h-4 text-text-muted" />
+            <p className="text-xs font-sans text-text-muted">
+              Your chat history is stored locally in your browser. No data is saved on our servers.
+            </p>
+          </div>
           
           {/* Scrollable Chat History */}
           <div className="flex-1 overflow-y-auto px-6 md:px-16 lg:px-24 py-12 flex flex-col gap-12 custom-scrollbar">
