@@ -17,6 +17,16 @@
 
 ---
 
+## Demo
+
+<div align="center">
+  <video src="./assets/demo.mp4" width="100%" controls autoplay loop muted playsinline>
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+---
+
 ## What is Ragfather?
 
 Ragfather is an **end-to-end, self-hosted RAG creation, evaluation, and deployment platform**. It gives you complete ownership over every stage of the RAG lifecycle — from raw document ingestion and multi-index storage, through rigorous automated evaluation, all the way to production-ready querying — without requiring a single external API call.
