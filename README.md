@@ -20,8 +20,8 @@
 ## Demo
 
 <div align="center">
-  <h3><a href="./assets/demo.mp4">▶️ Watch the Screencast Demo</a></h3>
-  <p><em>Click the link above to view the demonstration video on GitHub.</em></p>
+  <h3><a href="https://drive.google.com/file/d/1cBBCAGeLKQjZx5FvBnjmj7-Z-mQrvub3/view?usp=sharing" target="_blank" rel="noopener noreferrer">▶️ Watch the Screencast Demo</a></h3>
+  <p><em>Click the link above to view the demonstration video on Google Drive.</em></p>
 </div>
 
 ---
