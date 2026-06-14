@@ -20,9 +20,8 @@
 ## Demo
 
 <div align="center">
-  <video src="./assets/demo.mp4" width="100%" controls autoplay loop muted playsinline>
-    Your browser does not support the video tag.
-  </video>
+  <h3><a href="./assets/demo.mp4">▶️ Watch the Screencast Demo</a></h3>
+  <p><em>Click the link above to view the demonstration video on GitHub.</em></p>
 </div>
 
 ---
