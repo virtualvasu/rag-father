@@ -1,10 +1,6 @@
 <div align="center">
 
-# Ragfather
-
-**The Godfather of RAG Pipelines**
-
-*Build. Evaluate. Deploy. Own your AI, completely.*
+# Ragfather | LLMOps & RAG Evaluation Platform
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -28,9 +24,13 @@
 
 ## What is Ragfather?
 
-Ragfather is an **end-to-end, self-hosted RAG creation, evaluation, and deployment platform**. It gives you complete ownership over every stage of the RAG lifecycle — from raw document ingestion and multi-index storage, through rigorous automated evaluation, all the way to production-ready querying — without requiring a single external API call.
+**Stop coding RAG pipelines. Start experimenting.**
 
-Unlike generic RAG starter kits, Ragfather is designed for **experimentation and precision**. You can toggle individual pipeline components on and off, run head-to-head ablation studies across multiple retrieval strategies, and use the built-in evaluation suite to identify the optimal configuration for *your* specific data and use case. Every parameter is exposed. Every result is traceable.
+Ragfather is an LLMOps platform that transforms RAG development into a rapid, configurable workflow. 
+
+* **Configurable Experimentation**: Turn RAG architecture from a rigid coding task into a flexible sandbox.
+* **Plug-and-Play Retrieval**: Seamlessly toggle hybrid search, knowledge graph expansion, reranking, and CRAG. Run reproducible benchmarking and precision ablation tests on the fly.
+* **Evaluation Framework**: Don't guess—measure. Leverage automated dataset generation, RAGAS-based scoring, and comprehensive experiment tracking to guarantee retrieval quality before deployment.
 
 ---
 
