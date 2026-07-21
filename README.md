@@ -29,6 +29,7 @@
 Ragfather is an LLMOps platform that transforms RAG development into a rapid, configurable workflow. 
 
 * **Configurable Experimentation**: Turn RAG architecture from a rigid coding task into a flexible sandbox.
+* **OCR Ingestion**: Parse user-uploaded PDFs and image-based docs with OCR to build the RAG corpus.
 * **Plug-and-Play Retrieval**: Seamlessly toggle hybrid search, knowledge graph expansion, reranking, and CRAG. Run reproducible benchmarking and precision ablation tests on the fly.
 * **Evaluation Framework**: Don't guess—measure. Leverage automated dataset generation, RAGAS-based scoring, and comprehensive experiment tracking to guarantee retrieval quality before deployment.
 
