@@ -1,12 +1,12 @@
 """
-RAGAS-based evaluation of the Clause RAG pipeline.
+RAGAS-based evaluation of the Ragfather RAG pipeline.
 
 Judge model: Ollama qwen2.5:7b (local, free).
 
 Key improvements over naive scoring:
   1. Chain-of-Thought (CoT) — model reasons step-by-step BEFORE giving a score
   2. Structured JSON output — {"reasoning": "...", "score": X} forces deliberation
-  3. Concrete rubrics with legal-domain examples
+  3. Concrete rubrics with worked examples
   4. Robust JSON parsing with fallback regex extraction
 
 Metrics:
@@ -101,11 +101,11 @@ def score_faithfulness(question: str, answer: str, contexts: list[str]) -> float
     """
     context_text = "\n---\n".join(c[:600] for c in contexts[:5])
 
-    prompt = f"""You are evaluating a legal RAG system for FAITHFULNESS.
+    prompt = f"""You are evaluating a RAG system for FAITHFULNESS.
 
 Definition: Faithfulness measures whether every factual claim in the generated answer
 is explicitly supported by the retrieved context passages. An answer is unfaithful if
-it introduces facts, section numbers, or legal rules NOT present in the context.
+it introduces facts, section numbers, or rules NOT present in the context.
 
 ## Question
 {question}
@@ -143,10 +143,10 @@ def score_answer_relevancy(question: str, answer: str) -> float:
     Answer Relevancy: does the answer directly address what was asked?
     Uses CoT — model identifies question type and maps answer to it.
     """
-    prompt = f"""You are evaluating a legal RAG system for ANSWER RELEVANCY.
+    prompt = f"""You are evaluating a RAG system for ANSWER RELEVANCY.
 
 Definition: Answer relevancy measures how directly and completely the generated answer
-addresses the specific legal question asked. High relevancy means the answer targets
+addresses the specific question asked. High relevancy means the answer targets
 the exact question without excessive padding or tangential information.
 
 ## Question
@@ -156,7 +156,7 @@ the exact question without excessive padding or tangential information.
 {answer}
 
 ## Your Task
-Step 1 — Identify the core legal concept being asked about (definition / procedure / penalty / condition).
+Step 1 — Identify the core concept being asked about (definition / procedure / penalty / condition).
 Step 2 — Check if the answer directly addresses that concept.
 Step 3 — Check if the answer stays on topic or drifts to unrelated information.
 Step 4 — Assign a score.
@@ -192,7 +192,7 @@ def score_context_precision(question: str, contexts: list[str]) -> float:
         f"[Chunk {i+1}]: {ctx[:500]}" for i, ctx in enumerate(contexts)
     )
 
-    prompt = f"""You are evaluating a legal RAG system for CONTEXT PRECISION.
+    prompt = f"""You are evaluating a RAG system for CONTEXT PRECISION.
 
 Definition: Context precision measures what fraction of the retrieved context chunks
 are actually useful for answering the question. A chunk is useful if it contains
@@ -208,11 +208,11 @@ reading multiple chunks together.
 ## Your Task
 Step 1 — For each chunk, state in ONE sentence what it is about.
 Step 2 — Decide if each chunk is USEFUL or NOT USEFUL for answering the question.
-  - USEFUL: Contains legal rules, definitions, procedures, or conditions directly related to the question topic
+  - USEFUL: Contains rules, definitions, procedures, or conditions directly related to the question topic
   - NOT USEFUL: Completely unrelated to the question topic
 Step 3 — Calculate precision = (useful chunks) / (total chunks = {len(contexts)})
 
-Important: Be GENEROUS — if a chunk is about the same legal topic even if not a perfect match, count it as USEFUL.
+Important: Be GENEROUS — if a chunk is about the same topic even if not a perfect match, count it as USEFUL.
 
 Return ONLY valid JSON:
 {{"reasoning": "<per-chunk verdict>", "score": <float 0.0-1.0>}}"""
@@ -232,7 +232,7 @@ def score_context_recall(question: str, ground_truth: str, contexts: list[str]) 
     # If no ground truth, evaluate against question directly
     reference = ground_truth if ground_truth.strip() else f"[No ground truth — evaluate against question: {question}]"
 
-    prompt = f"""You are evaluating a legal RAG system for CONTEXT RECALL.
+    prompt = f"""You are evaluating a RAG system for CONTEXT RECALL.
 
 Definition: Context recall measures whether the retrieved context contains all the
 information needed to produce a complete answer. We compare what information IS

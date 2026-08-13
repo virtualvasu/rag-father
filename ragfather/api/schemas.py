@@ -1,5 +1,5 @@
 """
-Pydantic request/response schemas for the Clause API.
+Pydantic request/response schemas for the Ragfather API.
 All schemas follow the spec in 09-API-FRONTEND.md.
 """
 
@@ -8,10 +8,10 @@ from typing import Optional
 
 
 class QueryRequest(BaseModel):
-    query: str = Field(..., description="Legal question in plain English")
-    filter_act: Optional[str] = Field(
+    query: str = Field(..., description="Question in plain English")
+    filter_source: Optional[str] = Field(
         default=None,
-        description="Optional: restrict to one act. E.g. 'Companies', 'SEBI', 'DPIIT'",
+        description="Optional: restrict to one source document.",
     )
     use_crag: bool = Field(default=True, description="Enable CRAG quality check + retry loop")
     use_graph: bool = Field(default=True, description="Include Neo4j graph expansion")
@@ -21,8 +21,8 @@ class QueryRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "query": "What are the duties of a director under Companies Act?",
-                "filter_act": None,
+                "query": "What is the reimbursement policy for business travel?",
+                "filter_source": None,
                 "use_crag": True,
                 "use_graph": True,
             }
@@ -31,7 +31,7 @@ class QueryRequest(BaseModel):
 
 class Citation(BaseModel):
     source_index: Optional[int] = None  # 1-based index matching [Source N] in answer text
-    act: str
+    source: str
     section_type: str               # "Section" | "Rule" | "Regulation"
     section_number: str
     section_title: Optional[str] = None
@@ -68,6 +68,6 @@ class HealthResponse(BaseModel):
 class GraphStatsResponse(BaseModel):
     nodes: int
     edges: int
-    acts: list[str]
+    sources: list[str]
     sections: int
     chunks: int

@@ -5,33 +5,10 @@ import logging
 from typing import Optional
 
 from ragfather.config import settings
-from ragfather.ingestion.chunkers import LegalChunk
+from ragfather.ingestion.chunkers import Chunk
+from ragfather.generation.prompts import CONTEXTUALIZATION_PROMPT
 
 logger = logging.getLogger(__name__)
-
-CONTEXTUALIZATION_PROMPT = """You are processing a legal document for a RAG retrieval system.
-
-Here is the full parent section from {act_name}:
-<parent_section>
-{parent_text}
-</parent_section>
-
-Here is a specific sub-section chunk extracted from it:
-<chunk>
-{chunk_text}
-</chunk>
-
-Write exactly 1-2 sentences that:
-1. Identify which act and section number this chunk belongs to
-2. Describe the specific legal concept or obligation this chunk addresses
-3. Note any key conditions, entity types, or thresholds mentioned
-
-Be precise. Use the exact section number and act name.
-Return only the 1-2 sentences, no preamble, no explanation.
-
-Example output format:
-"This sub-section is from Section 42(3) of the Companies Act 2013, governing the 60-day cooling period between private placements. It specifies the restriction on issuing fresh offers within this period."
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -39,11 +16,11 @@ Example output format:
 # ---------------------------------------------------------------------------
 
 async def _contextualize_with_claude(
-    child: LegalChunk,
-    parent: LegalChunk,
+    child: Chunk,
+    parent: Chunk,
     client,  # anthropic.AsyncAnthropic
     model: str,
-) -> LegalChunk:
+) -> Chunk:
     """Contextualize a chunk using Claude (Anthropic API)."""
     import anthropic
 
@@ -54,7 +31,7 @@ async def _contextualize_with_claude(
             messages=[{
                 "role": "user",
                 "content": CONTEXTUALIZATION_PROMPT.format(
-                    act_name=child.act,
+                    source_name=child.source,
                     parent_text=parent.text,
                     chunk_text=child.text,
                 ),
@@ -76,11 +53,11 @@ async def _contextualize_with_claude(
 # ---------------------------------------------------------------------------
 
 async def _contextualize_with_ollama(
-    child: LegalChunk,
-    parent: LegalChunk,
+    child: Chunk,
+    parent: Chunk,
     client,  # openai.AsyncOpenAI pointed at Ollama
     model: str,
-) -> LegalChunk:
+) -> Chunk:
     """Contextualize a chunk using a local Ollama model."""
     try:
         response = await client.chat.completions.create(
@@ -89,7 +66,7 @@ async def _contextualize_with_ollama(
             messages=[{
                 "role": "user",
                 "content": CONTEXTUALIZATION_PROMPT.format(
-                    act_name=child.act,
+                    source_name=child.source,
                     parent_text=parent.text,
                     chunk_text=child.text,
                 ),
@@ -111,11 +88,11 @@ async def _contextualize_with_ollama(
 # ---------------------------------------------------------------------------
 
 async def _contextualize_with_custom(
-    child: LegalChunk,
-    parent: LegalChunk,
+    child: Chunk,
+    parent: Chunk,
     client,  # openai.AsyncOpenAI pointed at Custom
     model: str,
-) -> LegalChunk:
+) -> Chunk:
     """Contextualize a chunk using a custom OpenAI-compatible model."""
     try:
         response = await client.chat.completions.create(
@@ -124,7 +101,7 @@ async def _contextualize_with_custom(
             messages=[{
                 "role": "user",
                 "content": CONTEXTUALIZATION_PROMPT.format(
-                    act_name=child.act,
+                    source_name=child.source,
                     parent_text=parent.text,
                     chunk_text=child.text,
                 ),
@@ -145,11 +122,11 @@ async def _contextualize_with_custom(
 # ---------------------------------------------------------------------------
 
 async def contextualize_chunk(
-    child: LegalChunk,
-    parent: LegalChunk,
+    child: Chunk,
+    parent: Chunk,
     client,
     model: str,
-) -> LegalChunk:
+) -> Chunk:
     """
     Generate context sentence for a child chunk using its parent section.
 
@@ -164,10 +141,10 @@ async def contextualize_chunk(
 
 
 async def contextualize_all(
-    children: list[LegalChunk],
-    parent_map: dict[str, LegalChunk],
+    children: list[Chunk],
+    parent_map: dict[str, Chunk],
     concurrency: int = 10,
-) -> list[LegalChunk]:
+) -> list[Chunk]:
     """
     Contextualize all child chunks with controlled concurrency.
 
@@ -179,7 +156,7 @@ async def contextualize_all(
 
     Args:
         children:    List of child chunks to contextualize
-        parent_map:  Dict mapping parent_id → parent LegalChunk
+        parent_map:  Dict mapping parent_id → parent Chunk
         concurrency: Max parallel calls (default: 10)
 
     Returns:
@@ -221,7 +198,7 @@ async def contextualize_all(
 
     semaphore = asyncio.Semaphore(concurrency)
 
-    async def bounded_contextualize(child: LegalChunk) -> LegalChunk:
+    async def bounded_contextualize(child: Chunk) -> Chunk:
         async with semaphore:
             parent = parent_map.get(child.parent_id)
             if not parent:

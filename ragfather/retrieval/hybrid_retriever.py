@@ -127,7 +127,7 @@ def hybrid_retrieve(
     query: str,
     top_k_retrieval: int | None = None,
     top_k_rerank: int | None = None,
-    filter_act: str | None = None,
+    filter_source: str | None = None,
     use_graph: bool | None = None,
     use_reranker: bool | None = None,
 ) -> dict:
@@ -135,10 +135,10 @@ def hybrid_retrieve(
     Full hybrid retrieval pipeline.
 
     Args:
-        query:           Natural language legal question
+        query:           Natural language question
         top_k_retrieval: Candidates to gather before reranking (default: settings.top_k_retrieval)
         top_k_rerank:    Final results after reranking (default: settings.top_k_rerank)
-        filter_act:      Restrict to a specific act (e.g. "SEBI", "Companies")
+        filter_source:   Restrict to a specific source document
         use_graph:       Whether to include graph expansion (default: True)
         use_reranker:    Whether to apply cross-encoder reranking (default: True)
 
@@ -155,18 +155,18 @@ def hybrid_retrieve(
     use_graph = use_graph if use_graph is not None else settings.use_knowledge_graph
     use_reranker = use_reranker if use_reranker is not None else settings.use_cross_encoder_reranker
 
-    logger.info(f"Hybrid retrieve | query='{query[:80]}' | act_filter={filter_act}")
+    logger.info(f"Hybrid retrieve | query='{query[:80]}' | source_filter={filter_source}")
 
     # ── 1. Vector search ──────────────────────────────────────────────────
-    vector_hits = vector_search(query, top_k=top_k_retrieval, filter_act=filter_act)
+    vector_hits = vector_search(query, top_k=top_k_retrieval, filter_source=filter_source)
 
     # ── 2. BM25 search ────────────────────────────────────────────────────
     bm25, bm25_chunks = _get_bm25()
     bm25_hits = bm25_search(query, bm25, bm25_chunks, top_k=top_k_retrieval)
 
-    # Filter BM25 by act if requested
-    if filter_act:
-        bm25_hits = [c for c in bm25_hits if c.get("act") == filter_act]
+    # Filter BM25 by source if requested
+    if filter_source:
+        bm25_hits = [c for c in bm25_hits if c.get("source") == filter_source]
 
     # ── 3. RRF fusion ─────────────────────────────────────────────────────
     fused = _rrf_fuse([vector_hits, bm25_hits])

@@ -34,7 +34,7 @@ def format_context_blocks(chunks: list[dict]) -> str:
         section_title_part = f" — {section_title}" if section_title else ""
         block = CONTEXT_BLOCK_TEMPLATE.format(
             index=idx,
-            act=chunk.get("act", "Unknown Act"),
+            source=chunk.get("source", "Unknown Source"),
             section_number=chunk.get("section_number", ""),
             section_title_part=section_title_part,
             text=chunk.get("text", ""),
@@ -133,9 +133,9 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
       [Source 1], [Source 3], etc.
       Each is mapped back to the corresponding context chunk by 1-based index.
 
-    FALLBACK pattern — legacy act/section format:
-      [Companies Act 2013, Section 42]
-      [SEBI ICDR Regulations 2018, Regulation 26]
+    FALLBACK pattern — legacy source/section format:
+      [Employee Handbook, Section 3]
+      [Vendor Agreement, Article 12]
     """
     citations = []
     seen_indices: set[int] = set()
@@ -154,7 +154,7 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
             chunk = context_chunks[chunk_index]
             citations.append({
                 "source_index": n,
-                "act": chunk.get("act", ""),
+                "source": chunk.get("source", ""),
                 "section_type": "Section",
                 "section_number": chunk.get("section_number", ""),
                 "section_title": chunk.get("section_title"),
@@ -165,7 +165,7 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
             # Source index out of range — record it without chunk data
             citations.append({
                 "source_index": n,
-                "act": "",
+                "source": "",
                 "section_type": "Section",
                 "section_number": "",
                 "section_title": None,
@@ -173,17 +173,17 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
                 "text_excerpt": None,
             })
 
-    # ── Fallback: [Act, Section X] pattern ────────────────────────────────────
-    legacy_pattern = r'\[([^\]]+),\s*(Section|Rule|Regulation|Clause)\s+([^\]]+)\]'
-    for act, sec_type, sec_num in re.findall(legacy_pattern, answer):
-        key = f"{act.strip()}_{sec_num.strip()}"
+    # ── Fallback: [Source, Section X] pattern ─────────────────────────────────
+    legacy_pattern = r'\[([^\]]+),\s*(Section|Rule|Regulation|Article|Part)\s+([^\]]+)\]'
+    for source, sec_type, sec_num in re.findall(legacy_pattern, answer):
+        key = f"{source.strip()}_{sec_num.strip()}"
         if key in seen_keys:
             continue
         seen_keys.add(key)
 
         citation_obj: dict = {
             "source_index": None,
-            "act": act.strip(),
+            "source": source.strip(),
             "section_type": sec_type,
             "section_number": sec_num.strip(),
             "section_title": None,
@@ -194,7 +194,7 @@ def extract_citations(answer: str, context_chunks: list[dict]) -> list[dict]:
         # Try to match to a retrieved chunk
         for chunk in context_chunks:
             if (
-                act.strip().lower() in chunk.get("act", "").lower()
+                source.strip().lower() in chunk.get("source", "").lower()
                 and sec_num.strip() in chunk.get("section_number", "")
             ):
                 citation_obj.update({
@@ -218,7 +218,7 @@ def generate_answer(
     use_citations: bool = True,
 ) -> dict:
     """
-    Generate a legal answer with inline citations from retrieved chunks.
+    Generate an answer with inline citations from retrieved chunks.
 
     Args:
         query:          Original user question
@@ -236,7 +236,7 @@ def generate_answer(
     """
     if not context_chunks:
         return {
-            "answer": "I could not find relevant legal context to answer your question.",
+            "answer": "I could not find relevant context to answer your question.",
             "citations": [],
             "provider": settings.generation_provider,
             "chunks_used": 0,
@@ -281,7 +281,7 @@ def crag_check(query: str, context_chunks: list[dict]) -> dict:
     """
     # Build a compact summary of context (just section refs + first 100 chars each)
     context_summary = "\n".join([
-        f"- {c.get('act')} Section {c.get('section_number')}: {c.get('text', '')[:100]}..."
+        f"- {c.get('source')} Section {c.get('section_number')}: {c.get('text', '')[:100]}..."
         for c in context_chunks[:10]
     ])
 

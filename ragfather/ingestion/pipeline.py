@@ -10,7 +10,7 @@ from ragfather.ingestion.parsers.pdf_parser import parse_pdf
 from ragfather.ingestion.parsers.html_parser import parse_html
 from ragfather.ingestion.parsers.table_extractor import extract_tables
 from ragfather.ingestion.chunkers.hierarchical_chunker import create_hierarchical_chunks
-from ragfather.ingestion.chunkers import LegalChunk
+from ragfather.ingestion.chunkers import Chunk
 from ragfather.ingestion.enrichment.contextualizer import contextualize_all
 from ragfather.indexing.vector_indexer import index_chunks_to_qdrant
 from ragfather.indexing.bm25_indexer import build_bm25_index
@@ -117,7 +117,7 @@ async def run_ingestion_pipeline(
     # Step 2: Create chunks with hierarchy (parent, child, table)
     if status_callback: status_callback("[Step 2/6] Creating hierarchical chunks...")
     logger.info("\n[Step 2] Creating hierarchical chunks...")
-    doc_metadata: dict = {}  # Can be extended with act metadata
+    doc_metadata: dict = {}  # Can be extended with source metadata
     chunks = await asyncio.to_thread(create_hierarchical_chunks, parsed_docs, doc_metadata, tables_by_file)
 
     # Save raw chunks
@@ -172,7 +172,7 @@ async def run_ingestion_pipeline(
     else:
         logger.info("[Step 3] Skipping enrichment (test mode)")
 
-    # Convert LegalChunk objects to plain dicts for indexers
+    # Convert Chunk objects to plain dicts for indexers
     chunks_json = [chunk.dict() for chunk in chunks]
 
     nodes_created = 0

@@ -2,8 +2,8 @@
 Test the full query pipeline: retrieval → generation.
 
 Usage:
-    python scripts/run_query.py "What are the eligibility criteria for DPIIT startup recognition?"
-    python scripts/run_query.py "What is the penalty for late filing?" --act Companies
+    python scripts/run_query.py "What are the eligibility criteria for startup recognition?"
+    python scripts/run_query.py "What is the penalty for late filing?" --source handbook.pdf
     python scripts/run_query.py "..." --no-crag     # skip CRAG check
     python scripts/run_query.py "..." --no-graph    # skip graph expansion
 """
@@ -27,28 +27,28 @@ def main():
     args = sys.argv[1:]
 
     if not args or args[0].startswith("--"):
-        print("Usage: python scripts/run_query.py \"<your legal question>\" [--act ACT] [--no-crag] [--no-graph]")
+        print("Usage: python scripts/run_query.py \"<your question>\" [--source SOURCE] [--no-crag] [--no-graph]")
         sys.exit(1)
 
     query = args[0]
-    filter_act = None
+    filter_source = None
     use_crag = "--no-crag" not in args
     use_graph = "--no-graph" not in args
 
-    if "--act" in args:
-        act_idx = args.index("--act")
-        if act_idx + 1 < len(args):
-            filter_act = args[act_idx + 1]
+    if "--source" in args:
+        source_idx = args.index("--source")
+        if source_idx + 1 < len(args):
+            filter_source = args[source_idx + 1]
 
     print(f"\n{'='*60}")
     print(f"Query: {query}")
-    if filter_act:
-        print(f"Filter: {filter_act}")
+    if filter_source:
+        print(f"Filter: {filter_source}")
     print(f"{'='*60}\n")
 
     result = answer_query(
         query=query,
-        filter_act=filter_act,
+        filter_source=filter_source,
         use_graph=use_graph,
         use_crag=use_crag,
     )
@@ -73,7 +73,7 @@ def main():
     if result["citations"]:
         print("\nCitations:")
         for c in result["citations"]:
-            print(f"  [{c['act']}, {c['section_type']} {c['section_number']}]"
+            print(f"  [{c['source']}, {c['section_type']} {c['section_number']}]"
                   f"{' — ' + c['section_title'] if c.get('section_title') else ''}")
 
 

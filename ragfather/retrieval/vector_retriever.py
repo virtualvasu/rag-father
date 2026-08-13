@@ -37,7 +37,7 @@ def embed_query(query: str) -> list[float]:
 def vector_search(
     query: str,
     top_k: int = 20,
-    filter_act: str | None = None,
+    filter_source: str | None = None,
 ) -> list[dict]:
     """
     Search Qdrant for semantically similar chunks.
@@ -45,7 +45,7 @@ def vector_search(
     Args:
         query: Natural language query
         top_k: Number of results to return
-        filter_act: Optional — restrict to a specific act (e.g. "Companies", "SEBI")
+        filter_source: Optional — restrict to a specific source document
 
     Returns:
         List of dicts with chunk payload + 'vector_score' key
@@ -55,9 +55,9 @@ def vector_search(
 
     # Optional metadata filter
     qdrant_filter = None
-    if filter_act:
+    if filter_source:
         qdrant_filter = Filter(
-            must=[FieldCondition(key="act", match=MatchValue(value=filter_act))]
+            must=[FieldCondition(key="source", match=MatchValue(value=filter_source))]
         )
 
     results = client.search(

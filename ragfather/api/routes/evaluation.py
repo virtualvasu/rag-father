@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
 
 class EvaluationConfig(BaseModel):
-    variants: list[str] = ["naive_vector", "clause_advanced", "ragfather_full"]
+    variants: list[str] = ["naive_rag", "advanced_rag", "ragfather_full"]
     question_ids: list[str] | None = None
     skip_ragas: bool = False
 

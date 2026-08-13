@@ -1,0 +1,27 @@
+{
+  "pipeline_params": {
+    "skip_enrichment": false,
+    "use_knowledge_graph": true,
+    "use_cross_encoder_reranker": true,
+    "graph_search_hops": 1,
+    "wipe_data_on_pipeline_run": true,
+    "enrichment_provider": "ollama",
+    "generation_provider": "ollama",
+    "embedding_provider": "local",
+    "anthropic_api_key": "",
+    "openai_api_key": "",
+    "custom_llm_base_url": "",
+    "custom_llm_api_key": "",
+    "custom_llm_model": "",
+    "ollama_model": "qwen2.5:7b",
+    "child_chunk_size": 256,
+    "parent_chunk_size": 1024,
+    "child_chunk_overlap": 20,
+    "top_k_retrieval": 20,
+    "top_k_rerank": 5,
+    "max_agent_iterations": 3
+  },
+  "files_used": [
+    "handbook.pdf"
+  ]
+}

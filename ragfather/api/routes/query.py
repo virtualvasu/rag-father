@@ -26,7 +26,7 @@ router = APIRouter()
 @router.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
     """
-    Answer a legal question using the full hybrid RAG pipeline.
+    Answer a question using the full hybrid RAG pipeline.
 
     - Retrieves relevant chunks from Qdrant (vector) + BM25 + Neo4j (graph)
     - Optionally runs CRAG quality check and refines the query
@@ -37,7 +37,7 @@ async def query_endpoint(request: QueryRequest):
     try:
         result = answer_query(
             query=request.query,
-            filter_act=request.filter_act,
+            filter_source=request.filter_source,
             use_graph=request.use_graph,
             use_crag=request.use_crag,
             use_reranker=request.use_reranker,
@@ -116,17 +116,17 @@ async def graph_stats():
             auth=(settings.neo4j_username, settings.neo4j_password),
         )
         with driver.session() as session:
-            node_result  = session.run("MATCH (n) RETURN count(n) AS count").single()
-            edge_result  = session.run("MATCH ()-[r]->() RETURN count(r) AS count").single()
-            acts_result  = session.run("MATCH (a:Act) RETURN a.name AS name").data()
-            sect_result  = session.run("MATCH (s:Section) RETURN count(s) AS count").single()
-            chunk_result = session.run("MATCH (c:Chunk) RETURN count(c) AS count").single()
+            node_result    = session.run("MATCH (n) RETURN count(n) AS count").single()
+            edge_result    = session.run("MATCH ()-[r]->() RETURN count(r) AS count").single()
+            sources_result = session.run("MATCH (d:Document) RETURN d.name AS name").data()
+            sect_result    = session.run("MATCH (s:Section) RETURN count(s) AS count").single()
+            chunk_result   = session.run("MATCH (c:Chunk) RETURN count(c) AS count").single()
         driver.close()
 
         return GraphStatsResponse(
             nodes=node_result["count"],
             edges=edge_result["count"],
-            acts=[r["name"] for r in acts_result],
+            sources=[r["name"] for r in sources_result],
             sections=sect_result["count"],
             chunks=chunk_result["count"],
         )

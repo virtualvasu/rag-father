@@ -47,7 +47,7 @@ def expand_with_graph(chunk_ids: list[str], hops: int = 1) -> list[dict]:
                   AND NOT sibling.chunk_id IN $chunk_ids
                 RETURN DISTINCT
                     sibling.chunk_id AS chunk_id,
-                    sibling.act AS act,
+                    sibling.source AS source,
                     sibling.section_number AS section_number,
                     sibling.text AS text,
                     sibling.contextualized_text AS contextualized_text,
@@ -61,7 +61,7 @@ def expand_with_graph(chunk_ids: list[str], hops: int = 1) -> list[dict]:
             for record in sibling_result:
                 expanded.append(dict(record))
 
-            # 2. Adjacent sections (prev/next in same act)
+            # 2. Adjacent sections (prev/next in same source document)
             adjacent_result = session.run(
                 """
                 UNWIND $chunk_ids AS cid
@@ -70,7 +70,7 @@ def expand_with_graph(chunk_ids: list[str], hops: int = 1) -> list[dict]:
                 WHERE NOT adj_chunk.chunk_id IN $chunk_ids
                 RETURN DISTINCT
                     adj_chunk.chunk_id AS chunk_id,
-                    adj_chunk.act AS act,
+                    adj_chunk.source AS source,
                     adj_chunk.section_number AS section_number,
                     adj_chunk.text AS text,
                     adj_chunk.contextualized_text AS contextualized_text,
@@ -92,7 +92,7 @@ def expand_with_graph(chunk_ids: list[str], hops: int = 1) -> list[dict]:
                 WHERE NOT ref_chunk.chunk_id IN $chunk_ids
                 RETURN DISTINCT
                     ref_chunk.chunk_id AS chunk_id,
-                    ref_chunk.act AS act,
+                    ref_chunk.source AS source,
                     ref_chunk.section_number AS section_number,
                     ref_chunk.text AS text,
                     ref_chunk.contextualized_text AS contextualized_text,

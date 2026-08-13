@@ -1,0 +1,104 @@
+[
+  {
+    "chunk_id": "HANDBO_S1",
+    "type": "parent",
+    "parent_id": null,
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "1",
+    "section_title": "",
+    "text": "Section 1: Remote Work Policy Employees may work remotely up to three days per week with manager approval. All remote work requests must be submitted through the HR portal at least 48 hours in advance.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 1"
+    ],
+    "tokens": 45,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "HANDBO_S1_1",
+    "type": "child",
+    "parent_id": "HANDBO_S1",
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "1",
+    "section_title": "",
+    "text": "Section 1: Remote Work Policy Employees may work remotely up to three days per week with manager approval. All remote work requests must be submitted through the HR portal at least 48 hours in advance.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 1"
+    ],
+    "tokens": 45,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "HANDBO_S2",
+    "type": "parent",
+    "parent_id": null,
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "2",
+    "section_title": "",
+    "text": "Section 2: Vacation Policy Full-time employees accrue 15 days of paid vacation per year, increasing to 20 days after three years of service. Unused vacation days may be carried over up to a maximum of 5 days into the following year.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 2"
+    ],
+    "tokens": 53,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "HANDBO_S2_1",
+    "type": "child",
+    "parent_id": "HANDBO_S2",
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "2",
+    "section_title": "",
+    "text": "Section 2: Vacation Policy Full-time employees accrue 15 days of paid vacation per year, increasing to 20 days after three years of service. Unused vacation days may be carried over up to a maximum of 5 days into the following year.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 2"
+    ],
+    "tokens": 53,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "HANDBO_S3",
+    "type": "parent",
+    "parent_id": null,
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "3",
+    "section_title": "",
+    "text": "Section 3: Expense Reimbursement Employees traveling for business may be reimbursed for reasonable expenses including airfare, lodging, and meals. All expense reports must be submitted within 30 days of the trip with itemized receipts.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 3"
+    ],
+    "tokens": 44,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  },
+  {
+    "chunk_id": "HANDBO_S3_1",
+    "type": "child",
+    "parent_id": "HANDBO_S3",
+    "act": "handbook.pdf",
+    "chapter": null,
+    "section_number": "3",
+    "section_title": "",
+    "text": "Section 3: Expense Reimbursement Employees traveling for business may be reimbursed for reasonable expenses including airfare, lodging, and meals. All expense reports must be submitted within 30 days of the trip with itemized receipts.",
+    "contextualized_text": null,
+    "cross_references": [
+      "Section 3"
+    ],
+    "tokens": 44,
+    "source_file": "handbook.pdf",
+    "sentence_window": null
+  }
+]

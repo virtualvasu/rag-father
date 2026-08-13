@@ -8,8 +8,8 @@ All chunking logic (splitting, merging, cross-refs, token bounds) lives in secti
 import logging
 from typing import Optional
 
-from ragfather.ingestion.chunkers import LegalChunk
-from ragfather.ingestion.chunkers.section_chunker import create_legal_chunks
+from ragfather.ingestion.chunkers import Chunk
+from ragfather.ingestion.chunkers.section_chunker import create_chunks
 
 logger = logging.getLogger(__name__)
 
@@ -18,39 +18,39 @@ def create_hierarchical_chunks(
     parsed_docs: dict[str, str],
     doc_metadata: dict,
     tables_by_file: Optional[dict[str, list[dict]]] = None,
-) -> list[LegalChunk]:
+) -> list[Chunk]:
     """
     Create hierarchical chunks from all parsed documents.
 
     Produces three chunk types per document:
     - parent: one complete section (512-1024 tokens) — sent to LLM at generation
-    - child:  one sub-section/clause (128-256 tokens) — embedded and retrieved
+    - child:  one sub-section (128-256 tokens) — embedded and retrieved
     - table:  structured table, never split — Rule 4
 
     Args:
         parsed_docs:    Dict mapping filename → parsed text (from parse_all_documents)
-        doc_metadata:   Dict mapping filename → {"act": "Companies Act 2013", ...}
+        doc_metadata:   Dict mapping filename → {"source": "employee_handbook.pdf", ...}
         tables_by_file: Optional dict mapping filename → list of table dicts
                         (from table_extractor.extract_tables). If None, no table
                         chunks are created.
 
     Returns:
-        Flat list of LegalChunk objects across all documents.
+        Flat list of Chunk objects across all documents.
     """
     tables_by_file = tables_by_file or {}
-    all_chunks: list[LegalChunk] = []
+    all_chunks: list[Chunk] = []
 
     for filename, text in parsed_docs.items():
-        # Infer act name from metadata or filename
-        act_name = doc_metadata.get(filename, {}).get("act", filename.split("_")[0])
+        # Infer source name from metadata or filename
+        source_name = doc_metadata.get(filename, {}).get("source", filename.split("_")[0])
         chapter = doc_metadata.get(filename, {}).get("chapter")
         file_tables = tables_by_file.get(filename, [])
 
-        logger.info(f"Chunking {filename} (act: {act_name})")
+        logger.info(f"Chunking {filename} (source: {source_name})")
 
-        chunks = create_legal_chunks(
+        chunks = create_chunks(
             text=text,
-            act=act_name,
+            source=source_name,
             chapter=chapter,
             source_file=filename,
             tables=file_tables if file_tables else None,

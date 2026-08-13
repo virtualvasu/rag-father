@@ -1,22 +1,22 @@
-"""Document chunking — hierarchical, legal-aware text splitting."""
+"""Document chunking — hierarchical, structure-aware text splitting."""
 
 from pydantic import BaseModel
 from typing import Optional
 
 
-class LegalChunk(BaseModel):
+class Chunk(BaseModel):
     """
-    Represents a chunk of legal text at any hierarchy level.
+    Represents a chunk of document text at any hierarchy level.
 
     Three types of chunks form a hierarchy:
-    - document: metadata only, populates Neo4j Act nodes
+    - document: metadata only, populates Neo4j Document nodes
     - parent: one complete section (512-1024 tokens), sent to LLM at generation
-    - child: one sub-section/clause (128-256 tokens), embedded and retrieved
+    - child: one sub-section (128-256 tokens), embedded and retrieved
     - table: structured table, never split
     """
 
     chunk_id: str
-    """Deterministic ID. Format: ACT_S{n} or ACT_S{n}_{m}"""
+    """Deterministic ID. Format: SRC_S{n} or SRC_S{n}_{m}"""
 
     type: str
     """One of: "document", "parent", "child", "table" """
@@ -24,8 +24,8 @@ class LegalChunk(BaseModel):
     parent_id: Optional[str] = None
     """Only set on child chunks. Points to parent chunk ID."""
 
-    act: str
-    """Act name. e.g. "Companies Act 2013" """
+    source: str
+    """Source document name. e.g. "employee_handbook.pdf" """
 
     chapter: Optional[str] = None
     """Chapter name. e.g. "Chapter II" """
@@ -57,17 +57,3 @@ class LegalChunk(BaseModel):
     class Config:
         # Allow arbitrary types for compatibility
         arbitrary_types_allowed = True
-
-
-# Act abbreviations (locked — from architecture doc)
-ACT_ABBREVIATIONS = {
-    "Companies Act 2013": "CA2013",
-    "Companies (Incorporation) Rules 2014": "CIR2014",
-    "Companies (Share Capital) Rules 2014": "CSCR2014",
-    "Companies (Accounts) Rules 2014": "CAR2014",
-    "Companies (Meetings) Rules 2014": "CMR2014",
-    "Companies (Directors) Rules 2014": "CDR2014",
-    "SEBI (ICDR) Regulations 2018": "ICDR2018",
-    "SEBI (AIF) Regulations 2012": "AIF2012",
-    "DPIIT Startup Recognition Guidelines": "DPIIT_SRG",
-}

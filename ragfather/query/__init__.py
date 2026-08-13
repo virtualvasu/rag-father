@@ -1,12 +1,12 @@
 """
 Full query pipeline: retrieval → (CRAG check) → generation.
 
-This is the main entry point for answering a legal question.
+This is the main entry point for answering a question against the ingested corpus.
 The agent loop (06-AGENT-LOOP.md) builds on top of this.
 
 Usage:
     from ragfather.query.pipeline import answer_query
-    result = answer_query("What is the penalty for late filing under Companies Act?")
+    result = answer_query("What is the reimbursement policy for business travel?")
 """
 
 import logging
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def answer_query(
     query: str,
-    filter_act: str | None = None,
+    filter_source: str | None = None,
     use_graph: bool = True,
     use_reranker: bool = True,
     use_crag: bool = True,
@@ -32,8 +32,8 @@ def answer_query(
     Full pipeline: retrieve → CRAG check → generate.
 
     Args:
-        query:          User's legal question
-        filter_act:     Restrict retrieval to one act (e.g. "DPIIT", "Companies")
+        query:          User's question
+        filter_source:  Restrict retrieval to one source document
         use_graph:      Include Neo4j graph expansion
         use_reranker:   Apply cross-encoder reranking
         use_crag:       Enable CRAG quality check + retry loop
@@ -73,7 +73,7 @@ def answer_query(
             query=current_query,
             top_k_retrieval=top_k_retrieval,
             top_k_rerank=top_k_rerank,
-            filter_act=filter_act,
+            filter_source=filter_source,
             use_graph=use_graph,
             use_reranker=use_reranker,
         )

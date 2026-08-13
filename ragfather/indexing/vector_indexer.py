@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Qdrant payload field names
 FIELD_CHUNK_ID = "chunk_id"
 FIELD_TYPE = "type"
-FIELD_ACT = "act"
+FIELD_SOURCE = "source"
 FIELD_SECTION = "section_number"
 FIELD_SECTION_TITLE = "section_title"
 FIELD_PARENT_ID = "parent_id"
@@ -61,7 +61,7 @@ def ensure_collection(client: QdrantClient, recreate: bool = False) -> None:
     )
 
     # Payload indexes for fast metadata filtering
-    client.create_payload_index(name, FIELD_ACT, PayloadSchemaType.KEYWORD)
+    client.create_payload_index(name, FIELD_SOURCE, PayloadSchemaType.KEYWORD)
     client.create_payload_index(name, FIELD_TYPE, PayloadSchemaType.KEYWORD)
     client.create_payload_index(name, FIELD_SECTION, PayloadSchemaType.KEYWORD)
 
@@ -179,7 +179,7 @@ def index_chunks_to_qdrant(
         payload = {
             FIELD_CHUNK_ID:      chunk["chunk_id"],
             FIELD_TYPE:          chunk["type"],
-            FIELD_ACT:           chunk.get("act", ""),
+            FIELD_SOURCE:        chunk.get("source", ""),
             FIELD_SECTION:       chunk.get("section_number", ""),
             FIELD_SECTION_TITLE: chunk.get("section_title", ""),
             FIELD_PARENT_ID:     chunk.get("parent_id"),

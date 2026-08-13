@@ -1,4 +1,4 @@
-"""Knowledge graph construction in Neo4j from legal chunk hierarchy."""
+"""Knowledge graph construction in Neo4j from the document chunk hierarchy."""
 
 import logging
 from typing import Optional
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Node labels ───────────────────────────────────────────────────────────────
-LABEL_ACT = "Act"
+LABEL_DOCUMENT = "Document"
 LABEL_SECTION = "Section"
 LABEL_CHUNK = "Chunk"
 
@@ -40,7 +40,7 @@ def clear_graph(driver: Driver) -> None:
 def create_constraints(driver: Driver) -> None:
     """Create uniqueness constraints (idempotent)."""
     constraints = [
-        "CREATE CONSTRAINT act_name IF NOT EXISTS FOR (a:Act) REQUIRE a.name IS UNIQUE",
+        "CREATE CONSTRAINT document_name IF NOT EXISTS FOR (d:Document) REQUIRE d.name IS UNIQUE",
         "CREATE CONSTRAINT section_id IF NOT EXISTS FOR (s:Section) REQUIRE s.section_id IS UNIQUE",
         "CREATE CONSTRAINT chunk_id IF NOT EXISTS FOR (c:Chunk) REQUIRE c.chunk_id IS UNIQUE",
     ]
@@ -58,12 +58,12 @@ def _build_graph_tx(tx, chunks: list[dict]) -> tuple[int, int]:
     nodes = 0
     edges = 0
 
-    # ── 1. Collect unique Acts ─────────────────────────────────────────────
-    acts = {c["act"] for c in chunks if c.get("act")}
-    for act in acts:
+    # ── 1. Collect unique source Documents ─────────────────────────────────
+    sources = {c["source"] for c in chunks if c.get("source")}
+    for source in sources:
         tx.run(
-            "MERGE (a:Act {name: $name})",
-            name=act,
+            "MERGE (d:Document {name: $name})",
+            name=source,
         )
         nodes += 1
 
@@ -73,17 +73,17 @@ def _build_graph_tx(tx, chunks: list[dict]) -> tuple[int, int]:
         tx.run(
             """
             MERGE (s:Section {section_id: $section_id})
-            SET s.act = $act,
+            SET s.source = $source,
                 s.section_number = $section_number,
                 s.section_title = $section_title,
                 s.text = $text,
                 s.source_file = $source_file
             WITH s
-            MATCH (a:Act {name: $act})
-            MERGE (a)-[:HAS_SECTION]->(s)
+            MATCH (d:Document {name: $source})
+            MERGE (d)-[:HAS_SECTION]->(s)
             """,
             section_id=chunk_id,
-            act=chunk.get("act", ""),
+            source=chunk.get("source", ""),
             section_number=chunk.get("section_number", ""),
             section_title=chunk.get("section_title", ""),
             text=chunk.get("text", ""),
@@ -99,7 +99,7 @@ def _build_graph_tx(tx, chunks: list[dict]) -> tuple[int, int]:
             """
             MERGE (ch:Chunk {chunk_id: $chunk_id})
             SET ch.type = $type,
-                ch.act = $act,
+                ch.source = $source,
                 ch.section_number = $section_number,
                 ch.text = $text,
                 ch.contextualized_text = $ctx_text,
@@ -112,7 +112,7 @@ def _build_graph_tx(tx, chunks: list[dict]) -> tuple[int, int]:
             """,
             chunk_id=chunk["chunk_id"],
             type=chunk["type"],
-            act=chunk.get("act", ""),
+            source=chunk.get("source", ""),
             section_number=chunk.get("section_number", ""),
             text=chunk.get("text", ""),
             ctx_text=chunk.get("contextualized_text"),
@@ -123,16 +123,16 @@ def _build_graph_tx(tx, chunks: list[dict]) -> tuple[int, int]:
         nodes += 1
         edges += 2  # HAS_CHUNK + PARENT_OF
 
-    # ── 4. NEXT_SECTION edges (ordered sequence within an Act) ────────────
-    # Sort parents by act then section_number for sequential linking
+    # ── 4. NEXT_SECTION edges (ordered sequence within a source document) ──
+    # Sort parents by source then section_number for sequential linking
     sorted_parents = sorted(
         parents.values(),
-        key=lambda c: (c.get("act", ""), c.get("section_number", "")),
+        key=lambda c: (c.get("source", ""), c.get("section_number", "")),
     )
     for i in range(len(sorted_parents) - 1):
         curr = sorted_parents[i]
         nxt = sorted_parents[i + 1]
-        if curr.get("act") == nxt.get("act"):
+        if curr.get("source") == nxt.get("source"):
             tx.run(
                 """
                 MATCH (s1:Section {section_id: $id1})
@@ -169,9 +169,9 @@ def build_knowledge_graph(
     Build the full knowledge graph in Neo4j.
 
     Graph schema:
-        (Act)-[:HAS_SECTION]->(Section)-[:HAS_CHUNK]->(Chunk)
-        (Section)-[:NEXT_SECTION]->(Section)     [sequential order within act]
-        (Chunk)-[:CROSS_REFERENCES]->(Section)   [explicit legal cross-refs]
+        (Document)-[:HAS_SECTION]->(Section)-[:HAS_CHUNK]->(Chunk)
+        (Section)-[:NEXT_SECTION]->(Section)     [sequential order within a source document]
+        (Chunk)-[:CROSS_REFERENCES]->(Section)   [explicit cross-references]
 
     Args:
         chunks: All chunks (parent + child + table)
